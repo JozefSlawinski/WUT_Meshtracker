@@ -19,6 +19,14 @@ dostarczają danych potrzebnych do wyliczenia metryk PDR i~$\Delta t$ oraz do zm
 wykrycia przekroczenia granicy strefy ($T_z$) w~testach TC-MON-004, natomiast trzeci pozwala
 odtworzyć geometrię stref poza samą aplikacją - np.\ na potrzeby naniesienia jej na mapę
 w~zewnętrznym narzędziu GIS albo jako kopia zapasowa konfiguracji.
+Aby umożliwić analizę zebranych danych pomiarowych, konieczne było zaimplementowanie mechanizmu
+przechowywania historii pozycji węzłów oraz funkcji eksportu tych danych do formatu CSV.
+Zaimplementowano cztery funkcjonalności: 
+- mechanizm przechowywania historii pozycji węzłów i wyświetlania "śladu" na mapie
+- eksport zebranych danych pozycji do pliku CSV, 
+- eksport logu zdarzeń geofencingu (wejść i wyjść ze stref) 
+- eksport definicji stref (geometrii wielokątów wraz z listą obserwowanych węzłów). 
+Pierwsze dwie funkcjonalności mogą służyć użytkownikowi do wizualizacji ścieżki, którą poruszał się węzeł. Kolejne dwie funkcjonalności potrzebne są w większym stopniu do sprawdzenia dokładności, a co za tym idzie "przydatności" aplikacji i systemu. Eksport definicji stref umożliwia odtworzenie geometrii stref poza aplikacją - np. do naniesienia na mapę i obliczenia odległości wystąpienia zdarzenia WEJŚCIA/WYJŚCIA do/ze strefy od rzeczywistego miejsca przecięcia granicy strefy i ścieżki węzła. 
 
 \subsection*{Przechowywanie historii pozycji}
 \label{sec:historia}
@@ -35,7 +43,9 @@ data class TimedPosition(
     val latitude: Double,
     val longitude: Double,
     val altitude: Int,
-    val timestampSeconds: Int
+    val timestampSeconds: Int,
+    val snr: Float
+    val rssi: Int
 )
 \end{lstlisting}
 
@@ -49,6 +59,9 @@ danych - i~jest to świadoma decyzja projektowa, a~nie przeoczenie. Restart apli
 zgromadzone dotąd punkty, ale właśnie to zachowanie jest pożądane: kolejna sesja pomiarowa,
 np.\ inny spacer testowy przeprowadzony następnego dnia, powinna zaczynać się od czystej karty,
 bez ryzyka, że dane z~różnych sesji czy różnych węzłów wymieszają się ze sobą na jednym wykresie.
+Stan przechowywany jest wyłącznie w~pamięci operacyjnej, dlatego restart aplikacji
+powoduje utratę historii - jest to zachowanie celowe, ponieważ dane sesji pomiarowej
+nie powinny wpływać na kolejne sesje.
 
 \subsection*{Eksport danych sesji do CSV}
 \label{sec:eksport-csv}
@@ -67,6 +80,8 @@ plików.
 Nazwa pliku przyjmuje format \texttt{meshtracker\_export\_YYYYMMDD\_HHmmss.csv}, a~jego zawartość
 kodowana jest w~UTF-8. Nagłówek pliku wraz z~opisem poszczególnych kolumn przedstawia
 tabela~\ref{tab:csv-kolumny}.
+Eksportem zajmuje się \texttt{CsvExporter}, który zbiera dane z~\texttt{\seqsplit{PositionHistoryRepository}}
+i~\texttt{\seqsplit{PacketStatsRepository}}, a~następnie zapisuje plik przez standardowy mechanizm \texttt{MediaStore.Downloads}. Nagłówek zawiera 16 kolumn zebranych w (tabli~\ref{tab:csv-kolumny}).
 
 \begin{table}[!h]
     \caption{Kolumny pliku CSV}
@@ -86,12 +101,7 @@ tabela~\ref{tab:csv-kolumny}.
         \texttt{altitude\_m}        & \texttt{\seqsplit{TimedPosition.altitude}} &  \\
         \texttt{snr\_db}            & \texttt{MeshNodeInfo.snr} & Puste jeśli \texttt{Float.MAX\_VALUE} \\
         \texttt{rssi\_dbm}          & \texttt{MeshNodeInfo.rssi} & Puste jeśli \texttt{Int.MAX\_VALUE} \\
-        \texttt{hops\_away}         & \texttt{\seqsplit{MeshNodeInfo.hopsAway}} & \\
         \texttt{delta\_t\_s}        & \texttt{PacketStatsRepository} & $\Delta t$ od poprzedniego broadcastu \\
-        \texttt{battery\_pct}       & \texttt{\seqsplit{MeshNodeInfo.batteryLevel}} &  \\
-        \texttt{speed\_ms}          & \texttt{\seqsplit{MeshPosition.groundSpeed}} &  \\
-        \texttt{heading\_deg}       & \texttt{\seqsplit{MeshPosition.groundTrack}} &  \\
-        \texttt{satellites}         & \texttt{\seqsplit{MeshPosition.satellitesInView}} &  \\
         \hline
     \end{tabular}
     \normalsize
@@ -120,7 +130,7 @@ samego scenariusza testowego.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.45\linewidth]{ustawieniaEksport.jpg}
+    \includegraphics[width=0.45\linewidth]{img/ustawieniaEksport.jpg}
     \caption{Sekcja ,,Dane testowe'' w~ekranie ustawień aplikacji}
     \label{fig:ustawienia-eksport}
 \end{figure}
@@ -139,6 +149,10 @@ terenowej, obejmującej kilka niezależnych uruchomień aplikacji.
 
 Plik nosi nazwę \texttt{meshtracker\_zones\_YYYYMMDD\_HHmmss.csv} i~zawiera siedem kolumn opisanych
 w~tabeli~\ref{tab:csv-strefy}.
+Zdarzenia wejść i~wyjść ze stref (encja \texttt{ZoneEvent}, omówiona
+w~rozdz.~\ref{sec:geofencing}) są przechowywane w~bazie Room i~nie są tracone po
+restarcie aplikacji. Umożliwia to eksport pełnego logu zdarzeń z~całej sesji terenowej, nawet jeśli aplikacja była w~międzyczasie restartowana. Nazwa pliku przyjmuje format 
+\texttt{meshtracker\_zones\_YYYYMMDD\_HHmmss.csv}, a plik zawiera 7 kolumn wymienionych w 
 
 \begin{table}[!h]
     \caption{Kolumny pliku CSV zdarzeń stref}
@@ -182,6 +196,14 @@ po prostu jako kopia zapasowa konfiguracji, wykonana przed jej modyfikacją lub 
 
 Plik \texttt{meshtracker\_zone\_definitions\_YYYYMMDD\_HHmmss.csv} zawiera osiem kolumn opisanych
 w~tabeli~\ref{tab:csv-definicje-stref}.
+Trzeci wariant eksportu dotyczy samej \textbf{konfiguracji} stref -
+geometrii wielokątów i~listy węzłów, które dana strefa monitoruje
+tabela~\ref{tab:zone-entity}). W~odróżnieniu od eksportu zdarzeń (rozdz.~\ref{sec:eksport-strefy}),
+który dokumentuje \emph{co się wydarzyło}, ten eksport dokumentuje \emph{jak zdefiniowano
+strefę} - pozwala to np.\ odtworzyć granice stref w~zewnętrznym narzędziu GIS albo zachować
+kopię zapasową konfiguracji przed jej modyfikacją lub usunięciem. Nazwa pliku przyjmuje format\\
+\texttt{meshtracker\_zone\_definitions\_YYYYMMDD\_HHmmss.csv}.
+Plik zawiera 8 kolumn (tabela~\ref{tab:csv-definicje-stref})
 
 \begin{table}[!h]
     \caption{Kolumny pliku CSV definicji stref}
