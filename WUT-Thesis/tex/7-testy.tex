@@ -2,16 +2,13 @@
 \label{sec:historia-eksport}
 
 Aby umożliwić analizę zebranych danych pomiarowych, konieczne było zaimplementowanie mechanizmu
-przechowywania historii pozycji węzłów oraz funkcji eksportu tych danych do formatu CSV,
-który jest powszechnie używany do dalszej obróbki w arkuszach kalkulacyjnych.
-Zaimplementowano cztery funkcjonalności: mechanizm przechowywania historii pozycji węzłów,
-eksport zebranych danych pozycji do pliku CSV, eksport logu zdarzeń
-geofencingu (wejść i wyjść ze stref) oraz eksport definicji stref (geometrii wielokątów
-wraz z listą obserwowanych węzłów). Pierwsze dwie funkcjonalności dostarczają danych do analizy
-tras i~metryk PDR i~$\Delta t$, trzecia pozwala zmierzyć czas wykrycia przekroczenia granicy strefy
-(metryka~$T_z$) w~testach TC-MON-004, a~czwarta umożliwia odtworzenie geometrii stref poza
-aplikacją - np.\ do naniesienia na mapę w~zewnętrznym narzędziu GIS lub jako kopia zapasowa
-konfiguracji.
+przechowywania historii pozycji węzłów oraz funkcji eksportu tych danych do formatu CSV.
+Zaimplementowano cztery funkcjonalności: 
+- mechanizm przechowywania historii pozycji węzłów i wyświetlania "śladu" na mapie
+- eksport zebranych danych pozycji do pliku CSV, 
+- eksport logu zdarzeń geofencingu (wejść i wyjść ze stref) 
+- eksport definicji stref (geometrii wielokątów wraz z listą obserwowanych węzłów). 
+Pierwsze dwie funkcjonalności mogą służyć użytkownikowi do wizualizacji ścieżki, którą poruszał się węzeł. Kolejne dwie funkcjonalności potrzebne są w większym stopniu do sprawdzenia dokładności, a co za tym idzie "przydatności" aplikacji i systemu. Eksport definicji stref umożliwia odtworzenie geometrii stref poza aplikacją - np. do naniesienia na mapę i obliczenia odległości wystąpienia zdarzenia WEJŚCIA/WYJŚCIA do/ze strefy od rzeczywistego miejsca przecięcia granicy strefy i ścieżki węzła. 
 
 \subsection*{Przechowywanie historii pozycji}
 \label{sec:historia}
@@ -26,13 +23,11 @@ data class TimedPosition(
     val latitude: Double,
     val longitude: Double,
     val altitude: Int,
-    val timestampSeconds: Int
+    val timestampSeconds: Int,
+    val snr: Float
+    val rssi: Int
 )
 \end{lstlisting}
-
-Znacznik czasu pochodzi z~pola \texttt{time} obiektu \texttt{MeshPosition} (czas GPS
-nadany przez węzeł). Jeśli węzeł nie wypełnia tego pola, używany jest czas systemowy
-telefonu w~momencie odbioru broadcastu.
 
 Stan przechowywany jest wyłącznie w~pamięci operacyjnej, dlatego restart aplikacji
 powoduje utratę historii - jest to zachowanie celowe, ponieważ dane sesji pomiarowej
@@ -42,13 +37,7 @@ nie powinny wpływać na kolejne sesje.
 \label{sec:eksport-csv}
 
 Eksportem zajmuje się \texttt{CsvExporter}, który zbiera dane z~\texttt{\seqsplit{PositionHistoryRepository}}
-i~\texttt{\seqsplit{PacketStatsRepository}}, a~następnie zapisuje plik przez \texttt{MediaStore.Downloads}.
-
-\paragraph{Format pliku.}
-
-Nazwa pliku przyjmuje format\\
-\texttt{meshtracker\_export\_YYYYMMDD\_HHmmss.csv}.
-Plik kodowany jest w~UTF-8 z~separatorem \texttt{,}. Nagłówek zawiera 16 kolumn:
+i~\texttt{\seqsplit{PacketStatsRepository}}, a~następnie zapisuje plik przez standardowy mechanizm \texttt{MediaStore.Downloads}. Nagłówek zawiera 16 kolumn zebranych w (tabli~\ref{tab:csv-kolumny}).
 
 \begin{table}[!h]
     \caption{Kolumny pliku CSV}
@@ -68,12 +57,7 @@ Plik kodowany jest w~UTF-8 z~separatorem \texttt{,}. Nagłówek zawiera 16 kolum
         \texttt{altitude\_m}        & \texttt{\seqsplit{TimedPosition.altitude}} &  \\
         \texttt{snr\_db}            & \texttt{MeshNodeInfo.snr} & Puste jeśli \texttt{Float.MAX\_VALUE} \\
         \texttt{rssi\_dbm}          & \texttt{MeshNodeInfo.rssi} & Puste jeśli \texttt{Int.MAX\_VALUE} \\
-        \texttt{hops\_away}         & \texttt{\seqsplit{MeshNodeInfo.hopsAway}} & \\
         \texttt{delta\_t\_s}        & \texttt{PacketStatsRepository} & $\Delta t$ od poprzedniego broadcastu \\
-        \texttt{battery\_pct}       & \texttt{\seqsplit{MeshNodeInfo.batteryLevel}} &  \\
-        \texttt{speed\_ms}          & \texttt{\seqsplit{MeshPosition.groundSpeed}} &  \\
-        \texttt{heading\_deg}       & \texttt{\seqsplit{MeshPosition.groundTrack}} &  \\
-        \texttt{satellites}         & \texttt{\seqsplit{MeshPosition.satellitesInView}} &  \\
         \hline
     \end{tabular}
     \normalsize
@@ -98,7 +82,7 @@ wywołuje \texttt{\seqsplit{positionHistoryRepository.clearAll()}} oraz
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.45\linewidth]{ustawieniaEksport.jpg}
+    \includegraphics[width=0.45\linewidth]{img/ustawieniaEksport.jpg}
     \caption{Sekcja ,,Dane testowe'' w~ekranie ustawień aplikacji}
     \label{fig:ustawienia-eksport}
 \end{figure}
@@ -107,16 +91,9 @@ wywołuje \texttt{\seqsplit{positionHistoryRepository.clearAll()}} oraz
 \label{sec:eksport-strefy}
 
 Zdarzenia wejść i~wyjść ze stref (encja \texttt{ZoneEvent}, omówiona
-w~rozdz.~\ref{sec:geofencing}) są persystowane w~bazie Room i~nie są tracone po
-restarcie aplikacji - w~odróżnieniu od historii pozycji przechowywanej wyłącznie
-w~pamięci. Umożliwia to eksport pełnego logu zdarzeń z~całej sesji terenowej, nawet
-jeśli aplikacja była w~międzyczasie restartowana.
-
-\paragraph{Format pliku.}
-
-Nazwa pliku przyjmuje format\\
-\texttt{meshtracker\_zones\_YYYYMMDD\_HHmmss.csv}.
-Plik zawiera 7 kolumn:
+w~rozdz.~\ref{sec:geofencing}) są przechowywane w~bazie Room i~nie są tracone po
+restarcie aplikacji. Umożliwia to eksport pełnego logu zdarzeń z~całej sesji terenowej, nawet jeśli aplikacja była w~międzyczasie restartowana. Nazwa pliku przyjmuje format 
+\texttt{meshtracker\_zones\_YYYYMMDD\_HHmmss.csv}, a plik zawiera 7 kolumn wymienionych w 
 
 \begin{table}[!h]
     \caption{Kolumny pliku CSV zdarzeń stref}
@@ -162,18 +139,14 @@ w~\texttt{SettingsScreen}. Jeśli baza nie zawiera żadnych zdarzeń, plik nie j
 \subsection*{Eksport definicji stref geofencingu do CSV}
 \label{sec:eksport-definicje-stref}
 
-Trzeci wariant eksportu dotyczy nie historii, lecz samej \textbf{konfiguracji} stref -
-geometrii wielokątów i~listy węzłów, które dana strefa monitoruje (encja \texttt{Zone},
+Trzeci wariant eksportu dotyczy samej \textbf{konfiguracji} stref -
+geometrii wielokątów i~listy węzłów, które dana strefa monitoruje
 tabela~\ref{tab:zone-entity}). W~odróżnieniu od eksportu zdarzeń (rozdz.~\ref{sec:eksport-strefy}),
 który dokumentuje \emph{co się wydarzyło}, ten eksport dokumentuje \emph{jak zdefiniowano
 strefę} - pozwala to np.\ odtworzyć granice stref w~zewnętrznym narzędziu GIS albo zachować
-kopię zapasową konfiguracji przed jej modyfikacją lub usunięciem.
-
-\paragraph{Format pliku.}
-
-Nazwa pliku przyjmuje format\\
+kopię zapasową konfiguracji przed jej modyfikacją lub usunięciem. Nazwa pliku przyjmuje format\\
 \texttt{meshtracker\_zone\_definitions\_YYYYMMDD\_HHmmss.csv}.
-Plik zawiera 8 kolumn:
+Plik zawiera 8 kolumn (tabela~\ref{tab:csv-definicje-stref})
 
 \begin{table}[!h]
     \caption{Kolumny pliku CSV definicji stref}
