@@ -1,26 +1,35 @@
 \section{Przechowywanie i eksport historii pozycji}
 \label{sec:historia-eksport}
 
-Aby umożliwić analizę zebranych danych pomiarowych, konieczne było zaimplementowanie mechanizmu
-przechowywania historii pozycji węzłów oraz funkcji eksportu tych danych do formatu CSV,
-który jest powszechnie używany do dalszej obróbki w arkuszach kalkulacyjnych.
-Zaimplementowano cztery funkcjonalności: mechanizm przechowywania historii pozycji węzłów,
-eksport zebranych danych pozycji do pliku CSV, eksport logu zdarzeń
-geofencingu (wejść i wyjść ze stref) oraz eksport definicji stref (geometrii wielokątów
-wraz z listą obserwowanych węzłów). Pierwsze dwie funkcjonalności dostarczają danych do analizy
-tras i~metryk PDR i~$\Delta t$, trzecia pozwala zmierzyć czas wykrycia przekroczenia granicy strefy
-(metryka~$T_z$) w~testach TC-MON-004, a~czwarta umożliwia odtworzenie geometrii stref poza
-aplikacją - np.\ do naniesienia na mapę w~zewnętrznym narzędziu GIS lub jako kopia zapasowa
-konfiguracji.
+Aby ocenić, czy zbudowany system rzeczywiście spełnia wymagania sformułowane w~rozdz.~\ref{sec:geofencing}
+i~we wcześniejszych częściach pracy - zasięg, opóźnienie, skuteczność wykrywania przekroczenia
+granicy strefy - nie wystarczy samo obserwowanie aplikacji w~terenie. Obserwacja mówi, czy coś
+,,wygląda dobrze'', ale nie daje liczb, na podstawie których można policzyć konkretne metryki
+i~porównać je z~przyjętymi wymaganiami. Z~tego względu, zanim w~dalszej części rozdziału opisane
+zostaną same scenariusze testowe, warto wyjaśnić, w~jaki sposób aplikacja gromadzi dane z~sesji
+pomiarowej i~w~jaki sposób można je z~telefonu wydostać.
+
+Rozwiązanie tego problemu składa się z~dwóch elementów. Po pierwsze, aplikacja w~trakcie działania
+zapamiętuje przebieg sesji - kolejne pozycje węzłów oraz zdarzenia wejścia i~wyjścia ze stref -
+zamiast trzymać wyłącznie aktualny stan. Po drugie, zgromadzone w~ten sposób dane można w~dowolnym
+momencie wyeksportować do plików CSV, które od razu otwierają się w~arkuszu kalkulacyjnym i~nie
+wymagają żadnego ręcznego przepisywania. W~aplikacji dostępne są trzy niezależne eksporty: sesji
+pomiarowej (pozycji węzłów), logu zdarzeń geofencingu oraz definicji samych stref. Pierwsze dwa
+dostarczają danych potrzebnych do wyliczenia metryk PDR i~$\Delta t$ oraz do zmierzenia czasu
+wykrycia przekroczenia granicy strefy ($T_z$) w~testach TC-MON-004, natomiast trzeci pozwala
+odtworzyć geometrię stref poza samą aplikacją - np.\ na potrzeby naniesienia jej na mapę
+w~zewnętrznym narzędziu GIS albo jako kopia zapasowa konfiguracji.
 
 \subsection*{Przechowywanie historii pozycji}
 \label{sec:historia}
 
-\paragraph{Model danych.}
+Żeby na mapie dało się zobaczyć ślad, jaki zostawia poruszający się węzeł, a~później wyeksportować
+ten ślad do analizy, aplikacja musi pamiętać nie tylko to, gdzie węzeł znajduje się teraz, ale
+też gdzie był wcześniej. Za każdym razem, gdy do telefonu dotrze broadcast z~nową pozycją danego
+węzła, do jego historii dopisywany jest kolejny punkt reprezentowany przez niewielką klasę
+\texttt{TimedPosition}:
 
-Pojedynczy punkt reprezentuje klasa \texttt{TimedPosition}:
-
-\begin{lstlisting}[caption={Klasa \texttt{TimedPosition} - pojedynczy punkt},
+\begin{lstlisting}[caption={Klasa \texttt{TimedPosition} - pojedynczy punkt historii},
                    label={lst:timed-position}]
 data class TimedPosition(
     val latitude: Double,
@@ -30,25 +39,34 @@ data class TimedPosition(
 )
 \end{lstlisting}
 
-Znacznik czasu pochodzi z~pola \texttt{time} obiektu \texttt{MeshPosition} (czas GPS
-nadany przez węzeł). Jeśli węzeł nie wypełnia tego pola, używany jest czas systemowy
-telefonu w~momencie odbioru broadcastu.
+Znacznik czasu takiego punktu w~miarę możliwości pochodzi z~samego węzła - z~pola \texttt{time}
+odebranego pakietu pozycji, ustawianego przez odbiornik GPS w~chwili wyznaczenia współrzędnych.
+Dopiero gdy węzeł tej informacji nie przekazuje, aplikacja sięga po zapasowe rozwiązanie i~zapisuje
+czas systemowy telefonu z~chwili odbioru broadcastu.
 
-Stan przechowywany jest wyłącznie w~pamięci operacyjnej, dlatego restart aplikacji
-powoduje utratę historii - jest to zachowanie celowe, ponieważ dane sesji pomiarowej
-nie powinny wpływać na kolejne sesje.
+Cała historia trzymana jest wyłącznie w~pamięci operacyjnej telefonu, a~nie np.\ w~lokalnej bazie
+danych - i~jest to świadoma decyzja projektowa, a~nie przeoczenie. Restart aplikacji kasuje
+zgromadzone dotąd punkty, ale właśnie to zachowanie jest pożądane: kolejna sesja pomiarowa,
+np.\ inny spacer testowy przeprowadzony następnego dnia, powinna zaczynać się od czystej karty,
+bez ryzyka, że dane z~różnych sesji czy różnych węzłów wymieszają się ze sobą na jednym wykresie.
 
 \subsection*{Eksport danych sesji do CSV}
 \label{sec:eksport-csv}
 
-Eksportem zajmuje się \texttt{CsvExporter}, który zbiera dane z~\texttt{\seqsplit{PositionHistoryRepository}}
-i~\texttt{\seqsplit{PacketStatsRepository}}, a~następnie zapisuje plik przez \texttt{MediaStore.Downloads}.
+Po zakończeniu sesji terenowej zgromadzone w~pamięci dane trzeba w~jakiś sposób wydostać z~telefonu,
+żeby móc policzyć np.\ wskaźnik dostarczalności pakietów (PDR) czy opóźnienie $\Delta t$ - a~robi się
+to znacznie wygodniej w~arkuszu kalkulacyjnym niż przepisując liczby ręcznie z~ekranu telefonu.
+Za ten eksport odpowiada klasa \texttt{CsvExporter}, która zbiera dane z~dwóch źródeł -
+\texttt{\seqsplit{PositionHistoryRepository}} (historia pozycji) oraz
+\texttt{\seqsplit{PacketStatsRepository}} (statystyki odbieranych pakietów) - i~zapisuje je jako
+plik CSV bezpośrednio do katalogu \emph{Pobrane} telefonu, korzystając z~systemowego mechanizmu
+\texttt{MediaStore}. Dzięki temu na nowszych wersjach Androida (10 i~wyżej) zapis pliku nie wymaga
+żadnego dodatkowego uprawnienia, a~gotowy plik od razu widoczny jest w~standardowym menedżerze
+plików.
 
-\paragraph{Format pliku.}
-
-Nazwa pliku przyjmuje format\\
-\texttt{meshtracker\_export\_YYYYMMDD\_HHmmss.csv}.
-Plik kodowany jest w~UTF-8 z~separatorem \texttt{,}. Nagłówek zawiera 16 kolumn:
+Nazwa pliku przyjmuje format \texttt{meshtracker\_export\_YYYYMMDD\_HHmmss.csv}, a~jego zawartość
+kodowana jest w~UTF-8. Nagłówek pliku wraz z~opisem poszczególnych kolumn przedstawia
+tabela~\ref{tab:csv-kolumny}.
 
 \begin{table}[!h]
     \caption{Kolumny pliku CSV}
@@ -79,22 +97,26 @@ Plik kodowany jest w~UTF-8 z~separatorem \texttt{,}. Nagłówek zawiera 16 kolum
     \normalsize
 \end{table}
 
-Każdy punkt z~historii \texttt{PositionHistoryRepository} staje się jednym wierszem CSV.
-Węzły bez historii pozycji (np.\ węzły wewnątrz budynku, bez fixa GPS) eksportowane są
-jako jeden wiersz z~aktualnym stanem - kolumny \texttt{lat} i~\texttt{lng} pozostają
-puste, natomiast dostępne metadane (SNR, RSSI, bateria) są wypełniane.
+Każdy zapisany punkt z~historii danego węzła trafia do osobnego wiersza pliku, dzięki czemu
+z~pojedynczej sesji może powstać nawet kilkaset wierszy odzwierciedlających całą trasę. Węzły,
+dla których nie zdążono zarejestrować ani jednego punktu historii - bo np.\ przez całą sesję
+przebywały wewnątrz budynku i~nie miały namiaru GPS - również trafiają do eksportu, jako
+pojedynczy wiersz z~aktualnym stanem urządzenia; kolumny \texttt{lat} i~\texttt{lng} pozostają
+wtedy puste, natomiast pozostałe dostępne metadane, jak poziom baterii czy jakość sygnału, są
+zapisywane normalnie. Jeśli w~całej sesji nie zebrano żadnego punktu historii, plik w~ogóle nie
+powstaje - eksport kończy się w~takim przypadku kontrolowanym błędem zamiast tworzyć pusty
+i~bezużyteczny plik.
 
-Jeśli historia jest pusta, metoda zwraca \texttt{Result.failure} z~komunikatem
-\texttt{"empty"} i~plik nie jest tworzony.
-
-\paragraph{Interfejs użytkownika.}
-
-Eksport całej sesji dostępny jest w~sekcji ,,Dane testowe'' ekranu ustawień
-(rysunek~\ref{fig:ustawienia-eksport}). Przycisk ,,Eksportuj sesję do CSV'' wywołuje
-\texttt{\seqsplit{SettingsViewModel.exportSession()}}, który uruchamia \texttt{CsvExporter.export()}.
-Po zakończeniu otwiera Android Share sheet z~gotowym plikiem. Przycisk ,,Wyczyść historię pozycji''
-wywołuje \texttt{\seqsplit{positionHistoryRepository.clearAll()}} oraz
-\texttt{\seqsplit{packetStatsRepository.resetAll()}} po potwierdzeniu przez \texttt{AlertDialog}.
+Eksport uruchamiany jest przyciskiem ,,Eksportuj sesję do CSV'' w~sekcji ,,Dane testowe'' ekranu
+ustawień (rysunek~\ref{fig:ustawienia-eksport}). Gdy plik zostanie zapisany, aplikacja od razu
+otwiera systemowe okno udostępniania Androida, dzięki czemu plik można bezpośrednio wysłać
+e-mailem, przez komunikator albo zapisać w~chmurze, bez potrzeby ręcznego przeszukiwania katalogu
+\emph{Pobrane}. Dokładnie ten sam mechanizm - przycisk w~tej samej sekcji ekranu ustawień, a~po
+zapisaniu pliku systemowe okno udostępniania - towarzyszy również dwóm pozostałym eksportom
+opisanym w~dalszej części rozdziału, dlatego przy ich omówieniu nie będzie już powtarzany. Obok
+przycisków eksportu znajduje się też przycisk ,,Wyczyść historię pozycji'', usuwający zgromadzone
+dotąd dane po potwierdzeniu w~oknie dialogowym - przydatny np.\ między kolejnymi próbami tego
+samego scenariusza testowego.
 
 \begin{figure}[h]
     \centering
@@ -106,17 +128,17 @@ wywołuje \texttt{\seqsplit{positionHistoryRepository.clearAll()}} oraz
 \subsection*{Eksport zdarzeń geofencingu do CSV}
 \label{sec:eksport-strefy}
 
-Zdarzenia wejść i~wyjść ze stref (encja \texttt{ZoneEvent}, omówiona
-w~rozdz.~\ref{sec:geofencing}) są persystowane w~bazie Room i~nie są tracone po
-restarcie aplikacji - w~odróżnieniu od historii pozycji przechowywanej wyłącznie
-w~pamięci. Umożliwia to eksport pełnego logu zdarzeń z~całej sesji terenowej, nawet
-jeśli aplikacja była w~międzyczasie restartowana.
+Poza samymi pozycjami przydatne bywa też prześledzenie, w~którym dokładnie momencie węzeł wszedł
+do strefy bezpieczeństwa albo z~niej wyszedł - to właśnie te chwile pozwalają zmierzyć metrykę
+$T_z$, czyli czas między fizycznym przekroczeniem granicy a~wykryciem tego faktu przez aplikację,
+badaną w~testach TC-MON-004. W~odróżnieniu od historii pozycji, zdarzenia wejścia i~wyjścia ze
+stref (encja \texttt{ZoneEvent}, omówiona w~rozdz.~\ref{sec:geofencing}) nie znikają po restarcie
+aplikacji, ponieważ - w~przeciwieństwie do historii pozycji - są zapisywane trwale, w~lokalnej
+bazie danych Room. Dzięki temu pełny log zdarzeń można wyeksportować nawet po dłuższej sesji
+terenowej, obejmującej kilka niezależnych uruchomień aplikacji.
 
-\paragraph{Format pliku.}
-
-Nazwa pliku przyjmuje format\\
-\texttt{meshtracker\_zones\_YYYYMMDD\_HHmmss.csv}.
-Plik zawiera 7 kolumn:
+Plik nosi nazwę \texttt{meshtracker\_zones\_YYYYMMDD\_HHmmss.csv} i~zawiera siedem kolumn opisanych
+w~tabeli~\ref{tab:csv-strefy}.
 
 \begin{table}[!h]
     \caption{Kolumny pliku CSV zdarzeń stref}
@@ -139,41 +161,27 @@ Plik zawiera 7 kolumn:
     \normalsize
 \end{table}
 
-Wiersze posortowane są rosnąco według znacznika czasu, co ułatwia obliczenie czasu
-$T_z$ jako różnicy między fizycznym przekroczeniem granicy a~timestampem wiersza
-\texttt{ENTER} lub \texttt{EXIT} w~arkuszu kalkulacyjnym.
-
-\paragraph{Implementacja.}
-
-Metoda \texttt{\seqsplit{CsvExporter.exportZoneEvents()}} pobiera zdarzenia ze wszystkich stref  -
-zarówno aktywnych, jak i~dezaktywowanych  - ponieważ log historyczny nie powinien
-zależeć od bieżącej konfiguracji monitoringu. Dostęp do bazy odbywa się przez dwa
-jednorazowe zapytania DAO (\texttt{\seqsplit{getAllZonesOnce()}}, \texttt{\seqsplit{getEventsOnce(zoneId)}}),
-a nie przez \texttt{Flow}, co jest właściwe w~kontekście \texttt{Dispatchers.IO}.
-
-\paragraph{Interfejs użytkownika.}
-
-W~sekcji ,,Dane testowe'' ekranu ustawień, poniżej przycisku ,,Eksportuj sesję do CSV'',
-znajduje się przycisk ,,Eksportuj zdarzenia stref do CSV''. Wywołuje on
-\texttt{\seqsplit{SettingsViewModel.exportZoneEvents()}}, a~wynik trafia do osobnego kanału
-\texttt{\seqsplit{exportZonesEvent}}, obsługiwanego przez dedykowany \texttt{\seqsplit{LaunchedEffect}}
-w~\texttt{SettingsScreen}. Jeśli baza nie zawiera żadnych zdarzeń, plik nie jest tworzony.
+Wiersze pliku posortowane są rosnąco według znacznika czasu, co w~arkuszu kalkulacyjnym ułatwia
+policzenie różnicy między fizycznym momentem przekroczenia granicy a~czasem zarejestrowania
+odpowiedniego wiersza \texttt{ENTER} lub \texttt{EXIT}. Eksport obejmuje zdarzenia ze wszystkich
+zdefiniowanych stref - również tych aktualnie wyłączonych - ponieważ historyczny log nie powinien
+zależeć od bieżącej konfiguracji monitoringu, tylko od tego, co faktycznie się wydarzyło. Podobnie
+jak w~przypadku eksportu sesji, jeśli baza danych nie zawiera żadnych zdarzeń, plik nie zostaje
+utworzony. Eksport uruchamia się analogicznym przyciskiem - ,,Eksportuj zdarzenia stref do CSV'' -
+umieszczonym bezpośrednio pod przyciskiem eksportu sesji.
 
 \subsection*{Eksport definicji stref geofencingu do CSV}
 \label{sec:eksport-definicje-stref}
 
-Trzeci wariant eksportu dotyczy nie historii, lecz samej \textbf{konfiguracji} stref -
-geometrii wielokątów i~listy węzłów, które dana strefa monitoruje (encja \texttt{Zone},
-tabela~\ref{tab:zone-entity}). W~odróżnieniu od eksportu zdarzeń (rozdz.~\ref{sec:eksport-strefy}),
-który dokumentuje \emph{co się wydarzyło}, ten eksport dokumentuje \emph{jak zdefiniowano
-strefę} - pozwala to np.\ odtworzyć granice stref w~zewnętrznym narzędziu GIS albo zachować
-kopię zapasową konfiguracji przed jej modyfikacją lub usunięciem.
+Trzeci wariant eksportu różni się charakterem od dwóch poprzednich - nie dotyczy tego, co się
+wydarzyło, lecz tego, jak zostały zdefiniowane same strefy. Eksportowana jest więc geometria
+wielokątów wraz z~listą węzłów, które dana strefa obserwuje (encja \texttt{Zone},
+tabela~\ref{tab:zone-entity}). Taka funkcjonalność przydaje się np.\ wtedy, gdy granice
+wyznaczone w~terenie trzeba przenieść do zewnętrznego narzędzia GIS i~nanieść je na mapę, albo
+po prostu jako kopia zapasowa konfiguracji, wykonana przed jej modyfikacją lub usunięciem strefy.
 
-\paragraph{Format pliku.}
-
-Nazwa pliku przyjmuje format\\
-\texttt{meshtracker\_zone\_definitions\_YYYYMMDD\_HHmmss.csv}.
-Plik zawiera 8 kolumn:
+Plik \texttt{meshtracker\_zone\_definitions\_YYYYMMDD\_HHmmss.csv} zawiera osiem kolumn opisanych
+w~tabeli~\ref{tab:csv-definicje-stref}.
 
 \begin{table}[!h]
     \caption{Kolumny pliku CSV definicji stref}
@@ -196,28 +204,13 @@ Plik zawiera 8 kolumn:
     \normalsize
 \end{table}
 
-Każdy wierzchołek wielokąta strefy staje się jednym wierszem CSV - dzięki temu plik
-zachowuje pełną geometrię, kosztem denormalizacji (kolumny \texttt{zone\_id} .. \texttt{is\_active}
-oraz \texttt{watched\_node\_ids} powtarzają się w~każdym wierszu należącym do tej samej
-strefy). Jeżeli strefa nie posiada żadnych wierzchołków (przypadek brzegowy), eksportowany
-jest pojedynczy wiersz z~pustymi kolumnami \texttt{vertex\_index}, \texttt{vertex\_lat}
-i~\texttt{vertex\_lon}.
-
-\paragraph{Implementacja.}
-
-Metoda \texttt{\seqsplit{CsvExporter.exportZoneDefinitions()}} pobiera wszystkie strefy przez
-\texttt{\seqsplit{zoneRepository.getAllZonesOnce()}} - zarówno aktywne, jak i~nieaktywne - a~następnie
-dla każdej z~nich generuje wiersze na podstawie jej wierzchołków. Jeśli w~bazie nie ma
-żadnej zdefiniowanej strefy, metoda zwraca \texttt{Result.failure} z~komunikatem
-\texttt{"empty"} i~plik nie jest tworzony.
-
-\paragraph{Interfejs użytkownika.}
-
-W~sekcji ,,Dane testowe'' ekranu ustawień, poniżej przycisku ,,Eksportuj zdarzenia stref
-do CSV'', znajduje się trzeci przycisk - ,,Eksportuj strefy geofencingu do CSV'', opisany
-podpisem ,,Eksportuje definicje stref (geometria wielokątów i~obserwowane węzły) do
-naniesienia na mapę'' (rysunek~\ref{fig:ustawienia-eksport}). Wywołuje on
-\texttt{\seqsplit{SettingsViewModel.exportZoneDefinitions()}}, a~wynik trafia do osobnego
-kanału \texttt{\seqsplit{exportZoneDefinitionsEvent}}, obsługiwanego przez dedykowany
-\texttt{\seqsplit{LaunchedEffect}} w~\texttt{SettingsScreen}, który otwiera Android Share
-sheet z~tytułem ,,Eksportuj strefy geofencingu''.
+Ponieważ pojedyncza strefa może mieć wiele wierzchołków, każdy z~nich zapisywany jest jako osobny
+wiersz pliku - identyfikator strefy, jej nazwa, kolor, stan aktywności oraz lista obserwowanych
+węzłów powtarzają się więc w~każdym wierszu należącym do tej samej strefy. Jest to pewna
+denormalizacja danych, ale dzięki niej pojedynczy, płaski plik CSV w~pełni odwzorowuje geometrię
+strefy, bez konieczności sięgania po dodatkowy format czy zagnieżdżone struktury. Strefa, która
+nie ma jeszcze żadnych zapisanych wierzchołków - przypadek brzegowy, np.\ dopiero co utworzona
+i~nieukończona strefa - trafia do pliku jako pojedynczy wiersz z~pustymi polami współrzędnych.
+Podobnie jak w~poprzednich dwóch eksportach, brak jakichkolwiek zdefiniowanych stref oznacza, że
+plik w~ogóle nie powstaje. Eksport uruchamia trzeci przycisk w~tej samej sekcji ekranu ustawień -
+,,Eksportuj strefy geofencingu do CSV''.
