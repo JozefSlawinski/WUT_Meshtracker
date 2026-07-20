@@ -94,68 +94,28 @@ natychmiastową próbę połączenia bez czekania na automatyczne odświeżenie.
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
-    node distance=0.7cm,
     every node/.style={font=\small},
-    io/.style={ellipse, draw=black, fill=gray!18,
-        text width=4.2cm, minimum height=0.72cm, align=center},
-    proc/.style={rectangle, draw=black, fill=blue!7,
-        text width=4.2cm, minimum height=0.72cm, align=center},
-    dec/.style={diamond, draw=black, fill=orange!15,
-        minimum width=3.2cm, minimum height=1.0cm,
-        align=center, inner sep=1pt},
-    endok/.style={ellipse, draw=black, fill=green!15,
-        text width=3.6cm, minimum height=0.72cm, align=center},
-    enderr/.style={ellipse, draw=black, fill=red!10,
-        text width=3.2cm, minimum height=0.72cm, align=center},
-    side/.style={rectangle, draw=black!50, dashed, fill=yellow!10,
-        text width=3.5cm, minimum height=0.72cm, align=center},
+    state/.style={ellipse, draw=black, thick, fill=blue!7,
+        text width=2.6cm, minimum height=1.1cm, align=center},
+    stateEnd/.style={ellipse, draw=black, thick, fill=orange!15,
+        text width=2.6cm, minimum height=1.1cm, align=center},
     arr/.style={->, >=Stealth, thick},
-    darr/.style={->, >=Stealth, thick, dashed},
-    lbl/.style={font=\scriptsize},
+    lbl/.style={font=\scriptsize, align=center},
 ]
-% Główny przepływ
-\node[io] (recv)  {\small Odebranie \texttt{\seqsplit{ACTION\_MESH\_DISCONNECTED}}\\[1pt]
-                   {\scriptsize\texttt{isBound = true}}};
-\node[proc,  below=of recv]       (startR) {\texttt{startReconnecting()}};
-\node[proc,  below=of startR]     (setR)   {Stan $\to$ \texttt{Reconnecting}};
-\node[proc,  below=of setR]       (waitN)  {Odczekaj 30\,s\\[1pt]
-                                             {\scriptsize aktualizuj UI co 1\,s}};
-\node[dec,   below=0.9cm of waitN] (decB)  {Binding\\utracony?};
-\node[proc,  below=0.9cm of decB]  (aidlQ) {Zapytaj serwis AIDL\\[1pt]
-                                             o stan połączenia};
-\node[dec,   below=0.9cm of aidlQ] (decC)  {\texttt{STATE\_}\\[-1pt]\texttt{CONNECTED?}};
-\node[proc,  below=0.9cm of decC]  (incr)  {Inkrementuj\\licznik prób};
+\node[state]    (connecting) at (0,0)      {\texttt{Connecting(n)}};
+\node[state]    (idle)       at (-3.4,-3.4) {\texttt{Disconnected}};
+\node[state]    (connected)  at (3.4,-3.4)  {\texttt{Connected}};
+\node[stateEnd] (suspended)  at (0,3.0)     {\texttt{Suspended}};
 
-% Stany końcowe (prawa kolumna)
-\node[enderr, right=2.6cm of decB] (disc) {Stan $\to$ \texttt{Disconnected}};
-\node[endok,  right=2.6cm of decC] (conn) {Stan $\to$ \texttt{Connected}\\[1pt]
-                                            {\scriptsize wznów odświeżanie}};
-
-% Ścieżka użytkownika (prawa kolumna, u góry)
-\node[side, right=2.6cm of startR]  (ponow)   {Użytkownik:\\przycisk ,,Ponów''};
-\node[side, below=0.6cm of ponow]   (retryFn) {\texttt{retryConnect()}\\[1pt]
-                                               {\scriptsize anuluj, reset bindingu}};
-
-% Strzałki głównego przepływu
-\draw[arr] (recv)  -- (startR);
-\draw[arr] (startR)-- (setR);
-\draw[arr] (setR)  -- (waitN);
-\draw[arr] (waitN) -- (decB);
-\draw[arr] (decB)  -- node[lbl, above] {Tak} (disc);
-\draw[arr] (decB)  -- node[lbl, left=2pt] {Nie} (aidlQ);
-\draw[arr] (aidlQ) -- (decC);
-\draw[arr] (decC)  -- node[lbl, above] {Tak} (conn);
-\draw[arr] (decC)  -- node[lbl, left=2pt] {Nie} (incr);
-
-% Pętla powrotna (lewa strona)
-\draw[arr] (incr.west) -- ++(-1.8,0) |- (setR.west);
-
-% Ścieżka przycisku "Ponów"
-\draw[darr] (ponow)   -- (retryFn);
-\draw[darr] (retryFn) to[bend right=45] (startR.east);
+\draw[arr] (idle) -- node[lbl, above left] {\texttt{connect()} lub\\przycisk ,,Ponów''} (connecting);
+\draw[arr] (connecting) -- node[lbl, above right] {AIDL: \texttt{getConnectionState()}\\== \texttt{STATE\_CONNECTED}} (connected);
+\draw[arr] (connected) to[bend left=20] node[lbl, below] {broadcast\\\texttt{\seqsplit{ACTION\_MESH\_DISCONNECTED}}} (idle);
+\draw[arr] (connecting) -- node[lbl, left] {próba nieudana,\\$n \geq n_{\max}$} (suspended);
+\draw[arr] (suspended) to[bend left=20] node[lbl, right] {przycisk\\,,Ponów''} (connecting);
+\draw[arr] (connecting) to[out=150,in=210,looseness=6] node[lbl, left, xshift=-0.3cm] {próba nieudana,\\$n<n_{\max}$: $n \gets n+1$} (connecting);
 \end{tikzpicture}
-\caption{Procedura automatycznego ponownego połączenia}
-\label{fig:reconnect-flow}
+\caption{Automat stanów procedury ponownego połączenia}
+\label{fig:reconnect-fsm}
 \end{figure}
 
 \begin{figure}[!h]
