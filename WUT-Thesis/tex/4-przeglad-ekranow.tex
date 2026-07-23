@@ -33,33 +33,16 @@ typografię oraz motyw Material Design 3. Strukturę pakietu \texttt{ui} ilustru
 
 \begin{figure}[H]
     \centering
-    \scriptsize
-    \dirtree{%
-        .1 ui/.
-        .2 MainScreen.kt.
-        .2 components/.
-        .3 ConnectionStatusBar.kt.
-        .2 map/.
-        .3 MapScreen.kt.
-        .3 MapViewModel.kt.
-        .2 nodes/.
-        .3 NodeDetailScreen.kt.
-        .3 NodeFilterState.kt.
-        .3 NodeItem.kt.
-        .3 NodeListScreen.kt.
-        .2 settings/.
-        .3 SettingsScreen.kt.
-        .3 SettingsViewModel.kt.
-        .2 theme/.
-        .3 Color.kt.
-        .3 Theme.kt.
-        .3 Type.kt.
-        .2 zones/.
-        .3 ZoneBottomSheet.kt.
-        .3 ZoneConfirmDialog.kt.
-        .3 ZoneDetailScreen.kt.
-        .3 ZoneViewModel.kt.
-    }
+    \small
+    \begin{tabular}{@{}l@{\hspace{2.5em}}p{8cm}@{}}
+        \texttt{ui/}              & \texttt{MainScreen} \\[2pt]
+        \quad\texttt{components/} & \texttt{ConnectionStatusBar} \\[2pt]
+        \quad\texttt{map/}        & \texttt{MapScreen, MapViewModel} \\[2pt]
+        \quad\texttt{nodes/}      & \texttt{NodeDetailScreen, NodeFilterState, NodeItem, NodeListScreen} \\[2pt]
+        \quad\texttt{settings/}   & \texttt{SettingsScreen, SettingsViewModel} \\[2pt]
+        \quad\texttt{theme/}      & \texttt{Color, Theme, Type} \\[2pt]
+        \quad\texttt{zones/}      & \texttt{ZoneBottomSheet, ZoneConfirmDialog, ZoneDetailScreen, ZoneViewModel} \\
+    \end{tabular}
     \caption{Struktura pakietu \texttt{ui}}
     \label{fig:ui-structure}
 \end{figure}
