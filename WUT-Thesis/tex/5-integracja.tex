@@ -1,4 +1,5 @@
-\subsection*{Integracja z aplikacją Meshtastic}
+\newpage
+\section{Integracja z aplikacją Meshtastic}
 \label{sec:integracja-meshtastic}
 
 Aplikacja MeshTracker nie komunikuje się bezpośrednio z urządzeniami radiowymi - korzysta
@@ -44,10 +45,10 @@ Rysunek~\ref{fig:connection-flow} przedstawia sekwencję zdarzeń od uruchomieni
 \texttt{MapViewModel} do pojawienia się węzła na mapie.
 
 \begin{figure}[!h]
-    \label{fig:connection-flow}
     \centering
     \includegraphics[width=\linewidth]{schematPolaczenia.png}
     \caption{Sekwencja nawiązywania połączenia i przepływ danych}
+    \label{fig:connection-flow}
 \end{figure}
 
 \paragraph{Obsługa rozłączenia i błędów.}
@@ -119,10 +120,10 @@ natychmiastową próbę połączenia bez czekania na automatyczne odświeżenie.
 \end{figure}
 
 \begin{figure}[!h]
-    \label{fig:connection-status}
     \centering
     \includegraphics[width=0.45\linewidth]{nieMoznaPolaczycPasek.jpg}
     \caption{Pasek stanu połączenia - \textit{Ponów}}
+    \label{fig:connection-status}
 \end{figure}
 
 \paragraph{Model danych węzła.}
@@ -170,7 +171,6 @@ właściciela (tabela~\ref{tab:meshuserinfo}).
         \texttt{longName}      & \texttt{String}  & Pełna nazwa węzła nadana przez użytkownika \\
         \texttt{shortName}     & \texttt{String}  & Skrócona nazwa (do 4 znaków), widoczna na wyświetlaczu węzła \\
         \texttt{hwModelString} & \texttt{String} & Model sprzętu (np.\ \texttt{T\_BEAM}, \texttt{T\_ECHO}, \texttt{T1000\_E}) \\
-        \texttt{isLicensed}    & \texttt{Boolean} & Czy węzeł jest zarejestrowany jako amatorska stacja radiowa \\
         \texttt{role}          & \texttt{Int}     & Rola węzła w sieci (CLIENT, ROUTER, TRACKER itp.) \\
         \hline
     \end{tabular}
