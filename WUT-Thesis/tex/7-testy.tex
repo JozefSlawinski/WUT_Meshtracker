@@ -203,10 +203,9 @@ jednolity układ opisu: cel, metodyka, wynik, wniosek.
 na rzeczywistej trasie, z~prawdziwym szumem GPS, prawdziwym opóźnieniem transmisji mesh
 i~rzeczywistym kształtem stref - w~tym stref niewypukłych.
 
-\textit{Metodyka.} Zdefiniowano sześć stref (T1--T6) wzdłuż zamkniętej pętli, w~tym strefę T5 -
-niewypukły, kręty korytarz zbudowany z~12 wierzchołków. Węzeł mobilny (\texttt{!faf7b1f8}) wykonał
-cztery okrążenia pętli T6→T1→T2→T3→T4→T5 z~modułem T-1000-E przytwierdzonym do drona
-(podrozdz.~\ref{sec:metodyka-testow}). 
+\textit{Metodyka.} Zdefiniowano sześć stref (T1-T6) wzdłuż zamkniętej pętli, w~tym strefę T5 -
+niewypukły, kręty korytarz zbudowany z~12 wierzchołków. Węzeł mobilny wykonał cztery okrążenia 
+pętli T6→T1→T2→T3→T4→T5 z~modułem T-1000-E przytwierdzonym do drona (podrozdz.~\ref{sec:metodyka-testow}). 
 
 \textit{Wynik.} Zarejestrowano 85 zdarzeń \texttt{ENTER}/\texttt{EXIT}. Tabela~\ref{tab:test-terenowy-blad}
 przedstawia statystykę błędu zgłoszenia granicy, tzn.\ odległości między pozycją zgłoszenia zdarzenia
@@ -230,8 +229,8 @@ a~wyliczonym punktem przecięcia granicy strefy.
     \end{tabular}
 \end{table}
 
-Strefy wypukłe (T1--T4) generują dokładnie jedno wejście i~jedno wyjście na okrążenie, o~błędzie
-zwykle poniżej 20~m. Strefa T5, ze względu na swój kręty, niewypukły kształt, generuje 5--6 przejść
+Strefy wypukłe (T1-T4) generują dokładnie jedno wejście i~jedno wyjście na okrążenie, o~błędzie
+zwykle poniżej 20~m. Strefa T5, ze względu na swój kręty, niewypukły kształt, generuje 5-6 przejść
 granicy na okrążenie - węzeł wielokrotnie wchodzi i~wychodzi z~wąskiego korytarza w~ramach jednego
 przelotu przez tę część trasy. Największe zaobserwowane błędy (34,9~m i~35,05~m) wystąpiły przy
 nietypowo długich odstępach między kolejnymi próbkami GPS (odpowiednio 10~s i~20~s zamiast typowych
@@ -240,7 +239,7 @@ nietypowo długich odstępach między kolejnymi próbkami GPS (odpowiednio 10~s 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{testTerenowyMapaStref.png}
-    \caption{Trasa testu terenowego na tle stref T1--T6 wraz ze zdarzeniami \texttt{ENTER}/\texttt{EXIT}}
+    \caption{Trasa testu terenowego na tle stref T1-T6 wraz ze zdarzeniami \texttt{ENTER}/\texttt{EXIT}}
     \label{fig:test-terenowy-mapa}
 \end{figure}
 
@@ -284,11 +283,8 @@ prostej granicy działki o~długości ok. 100~m. Dzięki temu całe zarejestrowa
     \label{fig:test-terenowy-spacer}
 \end{figure}
 
-\textit{Wynik.} System zarejestrował 272 zdarzenia \texttt{ENTER}/\texttt{EXIT} - tabela~\ref{tab:scenariusz-a}. 89\% odstępów czasu między kolejnymi zdarzeniami
-wynosiło poniżej 15~s, co jest typową sygnaturą migotania: urządzenie ,,wchodzi i~wychodzi'' w~rytm
-szumu GPS, a~nie realnego, jednokierunkowego ruchu.
-
-Zbadano też, jak liczba fałszywych alarmów zależałaby od wprowadzenia bufora, tzn. wymogu, by
+\textit{Wynik.} System zarejestrował 272 zdarzenia \texttt{ENTER}/\texttt{EXIT}, które sklasyfikowano jako fałszywe alarmy. 
+Zbadano również, jak ich liczba zależałaby od wprowadzenia bufora, tzn. wymogu, by
 zarejestrowana pozycja oddaliła się od granicy o~co najmniej $X$ metrów, zanim system uzna
 przekroczenie za rzeczywiste wejście/wyjście. Bufor rzędu 6~m ograniczyłby liczbę zdarzeń o~ok.\
 99,6\% (z~272 do 1), a~bufor 8~m eliminuje migotanie niemal całkowicie względem wariantu bez bufora.
@@ -318,10 +314,10 @@ fizyczne ograniczenie wynikające z~interwału próbkowania.
         \hline
         \textbf{Prędkość [m/s]} & \textbf{Błąd średni [m]} & \textbf{Zakres [m]} \\
         \hline
-        2 & 4,97  & 0,64--8,84 \\
-        4 & 9,92  & 0,21--20,53 \\
-        6 & 16,84 & 0,44--30,03 \\
-        8 & 19,82 & 0,09--39,08 \\
+        2 & 4,97  & 0,64-8,84 \\
+        4 & 9,92  & 0,21-20,53 \\
+        6 & 16,84 & 0,44-30,03 \\
+        8 & 19,82 & 0,09-39,08 \\
         \hline
     \end{tabular}
 \end{table}
@@ -422,8 +418,8 @@ Najważniejszym praktycznym wnioskiem jest kompromis między liczbą fałszywych
 a~opóźnieniem wykrycia rzeczywistej ucieczki. Scenariusz A pokazał, że zwierzę znajdujące się tuż przy
 granicy, bez żadnej intencji jej opuszczenia, generuje ok.\ 500 potencjalnych powiadomień na godzinę
 - w~praktyce czyniąc system bezużytecznym bez dodatkowego mechanizmu wygładzającego. Wprowadzenie
-bufora rzędu 6-8~m redukuje liczbę takich zdarzeń o~ok.\ 94\%. Ten sam
-bufor ma jednak swoją cenę: scenariusz B pokazał, że przy dużych prędkościach ucieczki (6--8~m/s)
+bufora rzędu 6-8~m redukuje liczbę takich zdarzeń o 99,6\%. Ten sam
+bufor ma jednak swoją cenę: scenariusz B pokazał, że przy dużych prędkościach ucieczki (6-8~m/s)
 błąd zgłoszenia i~tak sięga kilkunastu-kilkudziesięciu metrów, a~krótkie, kilkumetrowe wtargnięcia
 poza granicę bywają pomijane niezależnie od bufora. Zwiększanie bufora zmniejsza więc
 liczbę fałszywych alarmów kosztem jeszcze późniejszego wykrycia faktycznej ucieczki. Dobór jego
