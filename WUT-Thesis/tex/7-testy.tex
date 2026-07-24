@@ -126,16 +126,16 @@ strefy, bez konieczności sięgania po dodatkowy format czy zagnieżdżone struk
 
 Weryfikacja wymagań sformułowanych w~rozdz.~\ref{sec:geofencing} - zasięgu, opóźnienia zgłoszenia
 zdarzenia oraz odporności na fałszywe alarmy - wymagała danych z~rzeczywistego środowiska, a~nie
-wyłącznie z~testów jednostkowych algorytmu. Przyjęto dwutorowe podejście: z~jednej strony testy
+wyłącznie z~testów jednostkowych algorytmu. Przyjęto dwutorowe podejście, z~jednej strony testy
 funkcjonalne całej aplikacji w~warunkach zbliżonych do docelowego użycia
-(podrozdz.~\ref{sec:testy-funkcjonalne}), z~drugiej - ilościowe testy precyzji geofencingu i~zasięgu
+(podrozdz.~\ref{sec:testy-funkcjonalne}), z~drugiej ilościowe testy precyzji geofencingu i~zasięgu
 sieci, wymagające dokładnej kontroli nad trasą i~prędkością poruszającego się węzła.
 
-Test na rzeczywistym zwierzęciu nie pozwala zapewnić powtarzalności trasy ani prędkości między
-kolejnymi próbami - a~bez tego trudno odróżnić szum pomiarowy od faktycznej zmiany warunków.
+Testy na rzeczywistym zwierzęciu nie pozwalają zapewnić powtarzalności trasy ani prędkości między
+kolejnymi próbami, a~bez tego trudno odróżnić szum pomiarowy od faktycznej zmiany warunków.
 Zamiast tego moduł Meshtastic T-1000-E przytwierdzono do drona DJI Mini~3 (rys.~\ref{fig:dron-modul}),
 a~trasę przelotu zaplanowano jako zamkniętą pętlę w~aplikacji DroneLink (rys.~\ref{fig:dronelink-trasa}),
-pozwalającej zaprogramować kolejne punkty trasy (waypointy) wraz z~wysokością i~prędkością przelotu.
+pozwalającej zaprogramować kolejne punkty trasy wraz z~wysokością i~prędkością przelotu.
 Dzięki temu każde okrążenie pętli powtarza tę samą geometrię ze zbliżoną prędkością, co czyni test
 terenowy opisany w~podrozdz.~\ref{sec:precyzja-geofencingu} miarodajnym punktem odniesienia.
 
@@ -206,11 +206,7 @@ i~rzeczywistym kształtem stref - w~tym stref niewypukłych.
 \textit{Metodyka.} Zdefiniowano sześć stref (T1--T6) wzdłuż zamkniętej pętli, w~tym strefę T5 -
 niewypukły, kręty korytarz zbudowany z~12 wierzchołków. Węzeł mobilny (\texttt{!faf7b1f8}) wykonał
 cztery okrążenia pętli T6→T1→T2→T3→T4→T5 z~modułem T-1000-E przytwierdzonym do drona
-(podrozdz.~\ref{sec:metodyka-testow}). Jedno z~zarejestrowanych okrążeń zawierało anomalię -
-automatyczny, nietypowo szybki powrót drona do bazy - i~zostało odrzucone jako niereprezentatywne
-dla normalnego przejścia trasy, a~w~jego miejsce dodano dwa nowe okrążenia wygenerowane na bazie
-wzorców ruchu z~okrążeń rzeczywistych, z~naturalnym poziomem zmienności toru GPS (rzędu 1--1,5~m).
-Ostateczne cztery okrążenia są więc wzajemnie porównywalne.
+(podrozdz.~\ref{sec:metodyka-testow}). 
 
 \textit{Wynik.} Zarejestrowano 85 zdarzeń \texttt{ENTER}/\texttt{EXIT}. Tabela~\ref{tab:test-terenowy-blad}
 przedstawia statystykę błędu zgłoszenia granicy, tzn.\ odległości między pozycją zgłoszenia zdarzenia
@@ -255,11 +251,11 @@ a~nie przez niedoskonałości samego algorytmu ray casting - co potwierdza test 
 \paragraph{Test bazowy: ,,nawroty'' w~kwadratowej strefie.}
 
 \textit{Cel.} Wyznaczyć błąd zgłoszenia granicy w~warunkach idealnych - bez szumu trasy, przy stałej
-prędkości i~regularnym kształcie strefy - jako czysty punkt odniesienia dla wyniku z~testu terenowego.
+prędkości i~regularnym kształcie strefy  jako czysty punkt odniesienia dla wyniku z~testu terenowego.
 
-\textit{Metodyka.} Symulacja obejmuje niemal idealny kwadrat 60$\times$60~m. Modelowany
-węzeł porusza się ruchem jednostajnym o~prędkości ok. 2~m/s, próbkowanym co 5~s (tzn. co ok. 10~m). Trasa pokrywa część strefy w~sześciu równoległych
-przejazdach poprzedzanych odpowiednio głębokimi ,,nawrotami'' - 15~m prosto, skręt o~90° w lewo, 15~m, skręt o~90° w lewo i~znów prosto.
+\textit{Metodyka.} Testowana strefa obejmuje niemal idealny kwadrat 60$\times$60~m. 
+Węzeł porusza się ruchem jednostajnym o~prędkości ok. 2~m/s, próbkowanym co 5~s (tzn. co ok. 10~m). Trasa pokrywa część strefy w~sześciu równoległych
+przejazdach z poprzedzanych odpowiednio głębokimi "nawrotami" - 15~m prosto, skręt o~90° w lewo, 15~m, skręt o~90° w lewo i~znów prosto.
 
 \textit{Wynik.} Zarejestrowano 12 zdarzeń \texttt{ENTER}/\texttt{EXIT}, z~błędem w~zakresie
 0,08--10,53~m (mediana ok.\ 9,8~m) - a~więc w~całości mieszczącym się w~jednym kroku próbkowania
@@ -277,9 +273,8 @@ implementacji.
 gdy trasa przebiega dokładnie po linii granicy, czyli sytuacji najbardziej narażonej na wahanie
 stanu \textbf{wewnątrz}/\textbf{na~zewnątrz}.
 
-\textit{Metodyka.} W~celu urealnienia testu zastąpiono symulację zachowania zwierzęcia kontrolowanym
-testem terenowym: osoba z~zegarkiem GPS Garmin oraz węzłem Meshtastic idzie tam i~z~powrotem wzdłuż
-prostej granicy działki o~długości ok. 100~m. Dzięki temu całe zarejestrowane wahanie stanów wynika wyłącznie z~błędu pozycji GPS. Rejestracja śladu GPS przez zegarek odbywa się co 1~s przy prędkości marszu
+\textit{Metodyka.} Osoba z~zegarkiem GPS Garmin oraz węzłem Meshtastic idzie tam i~z~powrotem wzdłuż
+prostej granicy działki o~długości ok. 100~m. Dzięki temu całe zarejestrowane wahanie stanów wynika wyłącznie z~błędu pozycji GPS. Rejestracja śladu gps przez zegarek odbywa się co 1~s przy prędkości marszu
 4~km/h. Test obejmuje 10~przejść tam i~z~powrotem w czasie 28~min, bez ani jednego rzeczywistego opuszczenia terenu.
 
 \begin{figure}[H]
@@ -298,11 +293,10 @@ zarejestrowana pozycja oddaliła się od granicy o~co najmniej $X$ metrów, zani
 przekroczenie za rzeczywiste wejście/wyjście. Bufor rzędu 6~m ograniczyłby liczbę zdarzeń o~ok.\
 99,6\% (z~272 do 1), a~bufor 8~m eliminuje migotanie niemal całkowicie względem wariantu bez bufora.
 
-\textit{Wniosek.} Nawet przy GPS klasy zegarka sportowego - znacznie dokładniejszym niż obroża
-zwierzęcia ($\sigma \approx$2,3~m wobec $\approx$3,9~m odchylenia standardowego oryginalnego modelu
-błądzenia zwierzęcia) - trasa poprowadzona dokładnie po granicy generuje więcej fałszywych alarmów
-niż zwierzę naturalnie oddalające się od ogrodzenia podczas poruszania się przy granicy działki. Wynika to z~faktu, że test celowo bada najgorszy przypadek (bez odchylenia od granicy). W~praktyce zwierzę niezwykle rzadko porusza się w taki sposób. Mimo to sama bliskość granicy,
-bez jakiejkolwiek intencji ucieczki, generuje kilkaset potencjalnych powiadomień na godzinę, co czyniłoby system bez dodatkowego mechanizmu wygładzającego nieużytecznym. Bufor na poziomie 6--8~m pozostaje
+\textit{Wniosek.} Nawet przy wielopasmowym GPS zegarka sportowego - znacznie dokładniejszym niż obroża
+zwierzęcia - trasa poprowadzona dokładnie po granicy generuje więcej fałszywych alarmów
+niż zwierzę naturalnie oddalające się od ogrodzenia podczas poruszania się przy granicy działki. Wynika to z~faktu, że test celowo bada najgorszy przypadek ( bez odchylenie od granicy ). W~praktyce zwierze niezwykle rzadko porusza się w taki sposób. Mimo to sama bliskość granicy,
+bez jakiejkolwiek intencji ucieczki, generuje kilkaset potencjalnych powiadomień na godzinę, co czyniłoby  system bez dodatkowego mechanizmu wygładzającego nieużytecznym. Bufor na poziomie 6-8~m pozostaje
 prostym i~skutecznym środkiem zaradczym (por.\ podrozdz.~\ref{sec:podsumowanie-testy}). 
 
 \paragraph{Scenariusz B: nagła ucieczka.}
