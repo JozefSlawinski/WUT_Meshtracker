@@ -141,7 +141,7 @@ terenowy opisany w~podrozdz.~\ref{sec:precyzja-geofencingu} miarodajnym punktem 
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.45\linewidth]{dronModulMeshtastic.jpg}
+    \includegraphics[width=0.7\linewidth]{dronModulMeshtastic.jpg}
     \caption{Moduł Meshtastic T-1000-E przytwierdzony do drona DJI Mini~3}
     \label{fig:dron-modul}
 \end{figure}
@@ -292,24 +292,6 @@ prostej granicy działki o~długości ok. 100~m. Dzięki temu całe zarejestrowa
 \textit{Wynik.} System zarejestrował 272 zdarzenia \texttt{ENTER}/\texttt{EXIT} - tabela~\ref{tab:scenariusz-a}. 89\% odstępów czasu między kolejnymi zdarzeniami
 wynosiło poniżej 15~s, co jest typową sygnaturą migotania: urządzenie ,,wchodzi i~wychodzi'' w~rytm
 szumu GPS, a~nie realnego, jednokierunkowego ruchu.
-
-\begin{table}[!h]
-    \caption{Fałszywe alarmy przy spacerze wzdłuż granicy - scenariusz A}
-    \label{tab:scenariusz-a}
-    \centering
-    \begin{tabular}{|l|r|}
-        \hline
-        \textbf{Parametr} & \textbf{Wartość} \\
-        \hline
-        Czas trwania testu & 28min\\
-        Liczba przejść tam i~z~powrotem & 10 \\
-        Mediana błędu GPS (zegarek Garmin) & 2,3 m \\
-        Liczba zarejestrowanych zdarzeń & 272 (587/h) \\
-        Udział odstępów między zdarzeniami $\leq$15~s & 89\% \\
-        Rzeczywistych ucieczek poza teren & 0 \\
-        \hline
-    \end{tabular}
-\end{table}
 
 Zbadano też, jak liczba fałszywych alarmów zależałaby od wprowadzenia bufora, tzn. wymogu, by
 zarejestrowana pozycja oddaliła się od granicy o~co najmniej $X$ metrów, zanim system uzna
