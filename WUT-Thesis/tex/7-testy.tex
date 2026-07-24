@@ -156,8 +156,8 @@ terenowy opisany w~podrozdz.~\ref{sec:precyzja-geofencingu} miarodajnym punktem 
 Pojedynczy przelot dostarcza jednak tylko jednego zestawu warunków - jednej prędkości, jednego
 kształtu granicy, jednego zachowania. Zjawiska takie jak powolne poruszanie się zwierzęcia tuż przy granicy działki albo gwałtowna, kilkusekundowa ucieczka przy różnych prędkościach
 są trudne lub niebezpieczne do wielokrotnego odtworzenia w~terenie z~wystarczającą liczbą powtórzeń,
-by wyciągnąć wnioski. Z~tego powodu przygotowano trzy scenariusze testów terenowych, które łączy
-wspólna metryka: błąd zgłoszenia granicy, czyli odległość między pozycją, w~której aplikacja
+by wyciągnąć wnioski. Z~tego powodu, poza opisanym wyżej testem terenowym rzeczywistym, przygotowano
+trzy dodatkowe scenariusze testów, które łączy wspólna metryka: błąd zgłoszenia granicy, czyli odległość między pozycją, w~której aplikacja
 zarejestrowała zdarzenie \texttt{ENTER}/\texttt{EXIT}, a~wyliczonym metodą interpolacji liniowej
 ,,idealnym'' punktem przecięcia granicy strefy przez tor ruchu węzła.
 
@@ -251,11 +251,11 @@ a~nie przez niedoskonałości samego algorytmu ray casting - co potwierdza test 
 \paragraph{Test bazowy: ,,nawroty'' w~kwadratowej strefie.}
 
 \textit{Cel.} Wyznaczyć błąd zgłoszenia granicy w~warunkach idealnych - bez szumu trasy, przy stałej
-prędkości i~regularnym kształcie strefy  jako czysty punkt odniesienia dla wyniku z~testu terenowego.
+prędkości i~regularnym kształcie strefy - jako czysty punkt odniesienia dla wyniku z~testu terenowego.
 
 \textit{Metodyka.} Testowana strefa obejmuje niemal idealny kwadrat 60$\times$60~m. 
 Węzeł porusza się ruchem jednostajnym o~prędkości ok. 2~m/s, próbkowanym co 5~s (tzn. co ok. 10~m). Trasa pokrywa część strefy w~sześciu równoległych
-przejazdach z poprzedzanych odpowiednio głębokimi "nawrotami" - 15~m prosto, skręt o~90° w lewo, 15~m, skręt o~90° w lewo i~znów prosto.
+przejazdach poprzedzanych odpowiednio głębokimi ,,nawrotami'' - 15~m prosto, skręt o~90° w lewo, 15~m, skręt o~90° w lewo i~znów prosto.
 
 \textit{Wynik.} Zarejestrowano 12 zdarzeń \texttt{ENTER}/\texttt{EXIT}, z~błędem w~zakresie
 0,08--10,53~m (mediana ok.\ 9,8~m) - a~więc w~całości mieszczącym się w~jednym kroku próbkowania
@@ -274,7 +274,7 @@ gdy trasa przebiega dokładnie po linii granicy, czyli sytuacji najbardziej nara
 stanu \textbf{wewnątrz}/\textbf{na~zewnątrz}.
 
 \textit{Metodyka.} Osoba z~zegarkiem GPS Garmin oraz węzłem Meshtastic idzie tam i~z~powrotem wzdłuż
-prostej granicy działki o~długości ok. 100~m. Dzięki temu całe zarejestrowane wahanie stanów wynika wyłącznie z~błędu pozycji GPS. Rejestracja śladu gps przez zegarek odbywa się co 1~s przy prędkości marszu
+prostej granicy działki o~długości ok. 100~m. Dzięki temu całe zarejestrowane wahanie stanów wynika wyłącznie z~błędu pozycji GPS. Rejestracja śladu GPS przez zegarek odbywa się co 1~s przy prędkości marszu
 4~km/h. Test obejmuje 10~przejść tam i~z~powrotem w czasie 28~min, bez ani jednego rzeczywistego opuszczenia terenu.
 
 \begin{figure}[H]
@@ -295,8 +295,8 @@ przekroczenie za rzeczywiste wejście/wyjście. Bufor rzędu 6~m ograniczyłby l
 
 \textit{Wniosek.} Nawet przy wielopasmowym GPS zegarka sportowego - znacznie dokładniejszym niż obroża
 zwierzęcia - trasa poprowadzona dokładnie po granicy generuje więcej fałszywych alarmów
-niż zwierzę naturalnie oddalające się od ogrodzenia podczas poruszania się przy granicy działki. Wynika to z~faktu, że test celowo bada najgorszy przypadek ( bez odchylenie od granicy ). W~praktyce zwierze niezwykle rzadko porusza się w taki sposób. Mimo to sama bliskość granicy,
-bez jakiejkolwiek intencji ucieczki, generuje kilkaset potencjalnych powiadomień na godzinę, co czyniłoby  system bez dodatkowego mechanizmu wygładzającego nieużytecznym. Bufor na poziomie 6-8~m pozostaje
+niż zwierzę naturalnie oddalające się od ogrodzenia podczas poruszania się przy granicy działki. Wynika to z~faktu, że test celowo bada najgorszy przypadek (bez odchylenia od granicy). W~praktyce zwierzę niezwykle rzadko porusza się w taki sposób. Mimo to sama bliskość granicy,
+bez jakiejkolwiek intencji ucieczki, generuje kilkaset potencjalnych powiadomień na godzinę, co czyniłoby system bez dodatkowego mechanizmu wygładzającego nieużytecznym. Bufor na poziomie 6--8~m pozostaje
 prostym i~skutecznym środkiem zaradczym (por.\ podrozdz.~\ref{sec:podsumowanie-testy}). 
 
 \paragraph{Scenariusz B: nagła ucieczka.}
@@ -356,9 +356,9 @@ zużycia baterii (podrozdz.~\ref{sec:testy-funkcjonalne}) i~zasięgu transmisji 
 \label{sec:zasieg-siec}
 
 O ile poprzednie testy koncentrowały się na dokładności detekcji granicy, o~tyle warunkiem
-koniecznym jej działania jest w~ogóle dotarcie pakietu z~pozycją węzła do stacji bazowej (węzła połączonego z telefonem przez Bluetooth). Poniższy test bada, jak wybór sprzętu i liczebność węzłów w sieci wpływa na zasięg sieci mesh oraz czy gorszy zasięg odbija się na dokładności pozycjonowania.
+koniecznym jej działania jest w~ogóle dotarcie pakietu z~pozycją węzła do stacji bazowej (węzła połączonego z telefonem przez Bluetooth). Poniższy test bada przede wszystkim, jak wybór sprzętu i liczebność węzłów w sieci wpływa na zasięg sieci mesh, a~przy okazji pozwala zaobserwować, czy gorszy zasięg wpływa zauważalnie na dokładność odbieranych pozycji.
 
-\textit{Metodyka.} W~odróżnieniu od poprzedniego podrozdziału, test przeprowadzono w~terenie, na trzech nakładających się na siebie rzeczywistych trasach biegacza w~lesie. Każdą z nich biegacz pokonał 3-krotnie zachowując podobne prędkości dla zachowania powtarzalności testów. Na tych samych trasach porównano trzy konfiguracje sprzętowe:
+\textit{Metodyka.} W~odróżnieniu od poprzedniego podrozdziału, test przeprowadzono w~terenie, na trzech nakładających się na siebie rzeczywistych trasach biegacza w~lesie (rys.~\ref{fig:trasy-porownanie}). Każdą z nich biegacz pokonał 3-krotnie zachowując podobne prędkości dla zachowania powtarzalności testów. Na tych samych trasach porównano trzy konfiguracje sprzętowe:
 
 \begin{itemize}
     \item \textbf{2$\times$ T-1000-E} - zarówno węzeł monitorowany, jak i~stacja bazowa, to modele T-1000-E
@@ -389,11 +389,11 @@ Jako ,,zasięg efektywny'' przyjęto arbitralnie odległość, przy której utra
     \end{tabular}
     \normalsize
 \end{table}
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{trasy.png}
     \caption{Porównanie tras testów}
-    \label{fig:placeholder}
+    \label{fig:trasy-porownanie}
 \end{figure}
 \begin{figure}[H]
     \centering
@@ -402,7 +402,7 @@ Jako ,,zasięg efektywny'' przyjęto arbitralnie odległość, przy której utra
     \label{fig:krzywe-strat}
 \end{figure}
 
-Sama zamiana anteny stacji bazowej (z~T-1000-E na T-Beam) ponad dwukrotnie zwiększa zasięg
+Sama zamiana modelu węzła stacji bazowej (z~T-1000-E na T-Beam) ponad dwukrotnie zwiększa zasięg
 efektywny (889~m→2052~m). Dodanie trzeciego węzła jako przekaźnika w~połowie trasy przynosi już
 mniejszy przyrost (2052~m→2278~m) - w~tym konkretnym układzie przekaźnik umieszczono blisko granicy
 zasięgu konfiguracji dwuwęzłowej, więc dodatkowy skok radiowy nie podwaja zasięgu, a~jedynie go
@@ -422,7 +422,7 @@ Najważniejszym praktycznym wnioskiem jest kompromis między liczbą fałszywych
 a~opóźnieniem wykrycia rzeczywistej ucieczki. Scenariusz A pokazał, że zwierzę znajdujące się tuż przy
 granicy, bez żadnej intencji jej opuszczenia, generuje ok.\ 500 potencjalnych powiadomień na godzinę
 - w~praktyce czyniąc system bezużytecznym bez dodatkowego mechanizmu wygładzającego. Wprowadzenie
-bufora rzędu 6--8~m redukuje liczbę takich zdarzeń o~ok.\ 94\%. Ten sam
+bufora rzędu 6--8~m redukuje liczbę takich zdarzeń o~ok.\ 99,6\%. Ten sam
 bufor ma jednak swoją cenę: scenariusz B pokazał, że przy dużych prędkościach ucieczki (6--8~m/s)
 błąd zgłoszenia i~tak sięga kilkunastu-kilkudziesięciu metrów, a~krótkie, kilkumetrowe wtargnięcia
 poza granicę bywają pomijane niezależnie od bufora. Zwiększanie bufora zmniejsza więc
@@ -433,7 +433,6 @@ akceptowalne opóźnienie reakcji.
 Testy zasięgu (podrozdz.~\ref{sec:zasieg-siec}) pokazały z~kolei, że wybór konfiguracji sieci ma
 większe znaczenie dla zasięgu efektywnego niż dodanie kolejnego węzła pośredniczącego w~tym
 konkretnym układzie - zamiana T-1000-E na T-Beam po stronie bazy ponad dwukrotnie zwiększyła zasięg
-(889~m→2052~m), podczas gdy dodatkowy przekaźnik wydłużył go jedynie do 2278~m. Niezależnie od
-konfiguracji, dokładność pozycjonowania pozostaje niezmieniona - to ważna informacja przy
-projektowaniu instalacji: rozbudowa sieci o~kolejne węzły poprawia zasięg, nie wpływając negatywnie
-na jakość samej detekcji granicy.
+(889~m→2052~m), podczas gdy dodatkowy przekaźnik wydłużył go jedynie do 2278~m. Nie zaobserwowano przy tym zauważalnego pogorszenia dokładności odbieranych pozycji wraz ze zmianą
+konfiguracji sprzętowej - sugeruje to, że rozbudowa sieci o~kolejne węzły poprawia zasięg, nie wpływając
+negatywnie na jakość samej detekcji granicy.
