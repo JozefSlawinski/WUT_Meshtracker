@@ -119,3 +119,345 @@ wiersz pliku - identyfikator strefy, jej nazwa, kolor, stan aktywności oraz lis
 węzłów powtarzają się więc w~każdym wierszu należącym do tej samej strefy. Jest to pewna
 denormalizacja danych, ale dzięki niej pojedynczy, płaski plik CSV w~pełni odwzorowuje geometrię
 strefy, bez konieczności sięgania po dodatkowy format czy zagnieżdżone struktury.
+
+
+\subsection*{Metodyka testów terenowych}
+\label{sec:metodyka-testow}
+
+Weryfikacja wymagań sformułowanych w~rozdz.~\ref{sec:geofencing} - zasięgu, opóźnienia zgłoszenia
+zdarzenia oraz odporności na fałszywe alarmy - wymagała danych z~rzeczywistego środowiska, a~nie
+wyłącznie z~testów jednostkowych algorytmu. Przyjęto dwutorowe podejście: z~jednej strony testy
+funkcjonalne całej aplikacji w~warunkach zbliżonych do docelowego użycia
+(podrozdz.~\ref{sec:testy-funkcjonalne}), z~drugiej - ilościowe testy precyzji geofencingu i~zasięgu
+sieci, wymagające dokładnej kontroli nad trasą i~prędkością poruszającego się węzła.
+
+Test na rzeczywistym zwierzęciu nie pozwala zapewnić powtarzalności trasy ani prędkości między
+kolejnymi próbami - a~bez tego trudno odróżnić szum pomiarowy od faktycznej zmiany warunków.
+Zamiast tego moduł Meshtastic T-1000-E przytwierdzono do drona DJI Mini~3 (rys.~\ref{fig:dron-modul}),
+a~trasę przelotu zaplanowano jako zamkniętą pętlę w~aplikacji DroneLink (rys.~\ref{fig:dronelink-trasa}),
+pozwalającej zaprogramować kolejne punkty trasy (waypointy) wraz z~wysokością i~prędkością przelotu.
+Dzięki temu każde okrążenie pętli powtarza tę samą geometrię ze zbliżoną prędkością, co czyni test
+terenowy opisany w~podrozdz.~\ref{sec:precyzja-geofencingu} miarodajnym punktem odniesienia.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.45\linewidth]{dronModulMeshtastic.jpg}
+    \caption{Moduł Meshtastic T-1000-E przytwierdzony do drona DJI Mini~3}
+    \label{fig:dron-modul}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\linewidth]{droneLinkTrasa.jpg}
+    \caption{Zaplanowana trasa przelotu w~aplikacji DroneLink}
+    \label{fig:dronelink-trasa}
+\end{figure}
+
+Pojedynczy przelot dostarcza jednak tylko jednego zestawu warunków - jednej prędkości, jednego
+kształtu granicy, jednego zachowania. Zjawiska takie powolne poruszanie się zwierzęcia tuż przy granicy działki albo gwałtowna, kilkusekundowa ucieczka przy różnych prędkościach
+są trudne lub niebezpieczne do wielokrotnego odtworzenia w~terenie z~wystarczającą liczbą powtórzeń,
+by wyciągnąć wnioski. Z~tego powodu przygotowano trzy scenariusze testów terenowych które łączy
+wspólna metryka: błąd zgłoszenia granicy, czyli odległość między pozycją, w~której aplikacja
+zarejestrowała zdarzenie \texttt{ENTER}/\texttt{EXIT}, a~wyliczonym metodą interpolacji liniowej
+,,idealnym'' punktem przecięcia granicy strefy przez tor ruchu węzła.
+
+\subsection*{Testy funkcjonalne}
+\label{sec:testy-funkcjonalne}
+
+Obok testów precyzji geofencingu (podrozdz.~\ref{sec:precyzja-geofencingu}) i~zasięgu sieci
+(podrozdz.~\ref{sec:zasieg-siec}), aplikację poddano testom funkcjonalnym, weryfikującym czy sam
+program, niezależnie od dokładności lokalizacji, nadaje się do długotrwałego, bezobsługowego
+użytku w~terenie. W~odróżnieniu od poprzednich testów, nie chodzi tu o~pojedynczą metrykę liczbową,
+lecz o~sprawdzenie następujących założeń:
+
+\begin{itemize}
+    \item \textbf{Stabilność aplikacji Android} - czy wielogodzinna sesja (monitorowanie stref,
+          odbieranie pozycji węzłów) nie prowadzi do awarii, wycieku pamięci ani spowolnienia
+          interfejsu.
+    \item \textbf{Stabilność połączenia mesh} - zachowanie aplikacji przy chwilowej utracie
+          i~odzyskaniu łączności z~węzłem (np.\ przy przejściowej utracie zasięgu radiowego) - czy
+          stan po odzyskaniu połączenia jest spójny z~rzeczywistą pozycją węzła.
+    \item \textbf{Czas pracy na baterii} - zarówno telefonu z~uruchomioną aplikacją (usługa
+          pierwszoplanowa \texttt{ZoneMonitorService}, rozdz.~\ref{sec:geofencing}), jak i~samego
+          węzła Meshtastic, w~typowym cyklu użycia.
+    \item \textbf{Trwałość działania w~tle} - czy Android nie ubija procesu
+          \texttt{ZoneMonitorService} mimo statusu usługi pierwszoplanowej, szczególnie po dłuższym
+          czasie bezczynności ekranu.
+    \item \textbf{Dostarczalność powiadomień} - czy każde zdarzenie \texttt{ENTER}/\texttt{EXIT}
+          zarejestrowane w~bazie skutkuje też widocznym powiadomieniem systemowym (przy przyznanym
+          uprawnieniu \texttt{POST\_NOTIFICATIONS}).
+    \item \textbf{Integralność eksportu CSV} - czy plik wyeksportowany po wielogodzinnej sesji
+          (setki pozycji i~zdarzeń) pozostaje kompletny i~poprawnie sformatowany, bez utraconych lub
+          zduplikowanych wierszy.
+\end{itemize}
+
+\subsection*{Testy precyzji geofencingu}
+\label{sec:precyzja-geofencingu}
+
+Cztery scenariusze opisane poniżej łączy wspólna metryka błędu zgłoszenia granicy oraz
+jednolity układ opisu: cel, metodyka, wynik, wniosek.
+
+\paragraph{Test terenowy rzeczywisty.}
+
+\textit{Cel.} Zweryfikować w~praktyce logikę \texttt{ENTER}/\texttt{EXIT} (rozdz.~\ref{sec:geofencing})
+na rzeczywistej trasie, z~prawdziwym szumem GPS, prawdziwym opóźnieniem transmisji mesh
+i~rzeczywistym kształtem stref - w~tym stref niewypukłych.
+
+\textit{Metodyka.} Zdefiniowano sześć stref (T1--T6) wzdłuż zamkniętej pętli, w~tym strefę T5 -
+niewypukły, kręty korytarz zbudowany z~12 wierzchołków. Węzeł mobilny (\texttt{!faf7b1f8}) wykonał
+cztery okrążenia pętli T6→T1→T2→T3→T4→T5 z~modułem T-1000-E przytwierdzonym do drona
+(podrozdz.~\ref{sec:metodyka-testow}). Jedno z~zarejestrowanych okrążeń zawierało anomalię -
+automatyczny, nietypowo szybki powrót drona do bazy - i~zostało odrzucone jako niereprezentatywne
+dla normalnego przejścia trasy, a~w~jego miejsce dodano dwa nowe okrążenia wygenerowane na bazie
+wzorców ruchu z~okrążeń rzeczywistych, z~naturalnym poziomem zmienności toru GPS (rzędu 1--1,5~m).
+Ostateczne cztery okrążenia są więc wzajemnie porównywalne.
+
+\textit{Wynik.} Zarejestrowano 85 zdarzeń \texttt{ENTER}/\texttt{EXIT}. Tabela~\ref{tab:test-terenowy-blad}
+przedstawia statystykę błędu zgłoszenia granicy, tzn.\ odległości między pozycją zgłoszenia zdarzenia
+a~wyliczonym punktem przecięcia granicy strefy.
+
+\begin{table}[!h]
+    \caption{Błąd zgłoszenia granicy strefy - test terenowy rzeczywisty}
+    \label{tab:test-terenowy-blad}
+    \centering
+    \begin{tabular}{|l|r|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\
+        \hline
+        Liczba zdarzeń ($n$) & 85 \\
+        Błąd minimalny & 0,16 m \\
+        Mediana & 9,37 m \\
+        Średnia & 10,54 m \\
+        Odchylenie standardowe & 7,07 m \\
+        Błąd maksymalny & 35,05 m \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Strefy wypukłe (T1--T4) generują dokładnie jedno wejście i~jedno wyjście na okrążenie, o~błędzie
+zwykle poniżej 20~m. Strefa T5, ze względu na swój kręty, niewypukły kształt, generuje 5--6 przejść
+granicy na okrążenie - węzeł wielokrotnie wchodzi i~wychodzi z~wąskiego korytarza w~ramach jednego
+przelotu przez tę część trasy. Największe zaobserwowane błędy (34,9~m i~35,05~m) wystąpiły przy
+nietypowo długich odstępach między kolejnymi próbkami GPS (odpowiednio 10~s i~20~s zamiast typowych
+5~s) - błąd zgłoszenia rośnie więc wraz z~odstępem próbkowania, a~nie jest przypadkowym szumem.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{WUT-Thesis/img/testTerenowyMapaStref.png}
+    \caption{Trasa testu terenowego na tle stref T1--T6 wraz ze zdarzeniami \texttt{ENTER}/\texttt{EXIT}}
+    \label{fig:test-terenowy-mapa}
+\end{figure}
+
+\textit{Wniosek.} Logika wykrywania przekroczenia granicy działa poprawnie na rzeczywistej trasie,
+również dla stref niewypukłych. Błąd zgłoszenia jest zdominowany przez interwał próbkowania GPS,
+a~nie przez niedoskonałości samego algorytmu ray casting - co potwierdza test bazowy opisany poniżej.
+
+\paragraph{Test bazowy: "nawroty" w~kwadratowej strefie .}
+
+\textit{Cel.} Wyznaczyć błąd zgłoszenia granicy w~warunkach idealnych - bez szumu trasy, przy stałej
+prędkości i~regularnym kształcie strefy - jako czysty punkt odniesienia dla wyniku z~testu terenowego.
+
+\textit{Metodyka.} Symulacja obejmuje niemal idealny kwadrat 60$\times$60~m. Modelowany
+węzeł porusza się ruchem jednostajnym o~prędkości ok. 2~m/s, próbkowanym co 5~s (tzn. co ok. 10~m). Trasa pokrywa część strefy w~sześciu równoległych
+przejazdach z poprzedzanych odpowiednio głębokimi "nawrotami" - 15~m prosto, skręt o~90° w lewo, 15~m, skręt o~90° w lewo i~znów prosto.
+
+\textit{Wynik.} Zarejestrowano 12 zdarzeń \texttt{ENTER}/\texttt{EXIT}, z~błędem w~zakresie
+0,08-10,53~m (mediana ok.\ 9,8~m) - a~więc w~całości mieszczącym się w~jednym kroku próbkowania
+(10~m), zgodnie z~oczekiwaniem dla stałej prędkości i prostolinijnej trasy.
+
+\textit{Wniosek.} Algorytm ray casting i~interpolacja punktu przecięcia nie wprowadzają
+dodatkowego błędu ponad ten wynikający z~dyskretnego próbkowania GPS. Różnica między tym wynikiem
+a~testem terenowym (błąd średni 10,54~m, tab.~\ref{tab:test-terenowy-blad}) pokazuje więc wkład
+realnych czynników - szumu GPS, zmiennej prędkości i~nieregularnego kształtu granic - a~nie błędu
+implementacji.
+
+\paragraph{Scenariusz A: spacer przy granicy.}
+
+\textit{Cel.} Oszacować ryzyko fałszywych alarmów w~najgorszym realistycznie możliwym przypadku -
+gdy trasa przebiega dokładnie po linii granicy, czyli sytuacji najbardziej narażonej na wahanie
+stanu \textbf{wewnątrz}/\textbf{na~zewnątrz}.
+
+\textit{Metodyka.} W~celu urealnienia testu zastąpiono symulację zachowania zwierzęcia kontrolowanym
+testem terenowym: osoba z~zegarkiem GPS Garmin oraz węzłem Meshtastic idzie tam i~z~powrotem wzdłuż
+prostej granicy działki o~długości ok. 100~m. Dzięki temu całe zarejestrowane wahanie stanów wynika wyłącznie z~błędu pozycji GPS. Rejestracja śladu gps przez zegarek odbywa się co 1~s przy prędkości marszu
+4~km/h. Test obejmuje 10~przejść tam i~z~powrotem w czasie 28~min, bez ani jednego rzeczywistego opuszczenia terenu.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{WUT-Thesis/img/testTerenowySpacerPrzyGranicy.png}
+    \caption{Trasa testu terenowego "spacer" przy granicy działki (miedzy) z~zaznaczonymi zdarzeniami}
+    \label{fig:test-terenowy-spacer}
+\end{figure}
+
+\textit{Wynik.} System zarejestrował 272 zdarzenia \texttt{ENTER}/\texttt{EXIT} - tabela~\ref{tab:scenariusz-a}. 89\% odstępów czasu między kolejnymi zdarzeniami
+wynosiło poniżej 15~s, co jest typową sygnaturą migotania: urządzenie ,,wchodzi i~wychodzi'' w~rytm
+szumu GPS, a~nie realnego, jednokierunkowego ruchu.
+
+\begin{table}[!h]
+    \caption{Fałszywe alarmy przy spacerze wzdłuż granicy - scenariusz A}
+    \label{tab:scenariusz-a}
+    \centering
+    \begin{tabular}{|l|r|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\
+        \hline
+        Czas trwania testu & 28min\\
+        Liczba przejść tam i~z~powrotem & 10 \\
+        Mediana błędu GPS (zegarek Garmin) & 2,3 m \\
+        Liczba zarejestrowanych zdarzeń & 272 (587/h) \\
+        Udział odstępów między zdarzeniami $\leq$15~s & 89\% \\
+        Rzeczywistych ucieczek poza teren & 0 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Zbadano też, jak liczba fałszywych alarmów zależałaby od wprowadzenia bufora, tzn. wymogu, by
+zarejestrowana pozycja oddaliła się od granicy o~co najmniej $X$ metrów, zanim system uzna
+przekroczenie za rzeczywiste wejście/wyjście. Bufor rzędu 6~m ograniczyłby liczbę zdarzeń o~ok.\
+99,6\% (z~272 do 1), a~bufor 8~m eliminuje migotanie niemal całkowicie względem wariantu bez bufora.
+
+\textit{Wniosek.} Nawet przy GPS klasy zegarka sportowego - znacznie dokładniejszym niż obroża
+zwierzęcia ($\sigma \approx$2,3~m wobec $\approx$3,9~m odchylenia standardowego oryginalnego modelu
+błądzenia zwierzęcia) - trasa poprowadzona dokładnie po granicy generuje więcej fałszywych alarmów
+niż zwierzę naturalnie oddalające się od ogrodzenia podczas poruszania się przy granicy działki. Wynika to z~faktu, że test celowo bada najgorszy przypadek ( bez odchylenie od granicy ). W~praktyce zwierze niezwykle rzadko porusza się w taki sposób. Mimo to sama bliskość granicy,
+bez jakiejkolwiek intencji ucieczki, generuje kilkaset potencjalnych powiadomień na godzinę, co czyniłoby  system bez dodatkowego mechanizmu wygładzającego nieużytecznym. Bufor na poziomie 6--8~m pozostaje
+prostym i~skutecznym środkiem zaradczym (por.\ podrozdz.~\ref{sec:podsumowanie-testy}). 
+
+\paragraph{Scenariusz B: nagła ucieczka.}
+
+\textit{Cel.} Zbadać opóźnienie i~próg wykrywalności systemu przy szybkim, celowym opuszczeniu
+strefy.
+
+\textit{Metodyka.} Najpierw wykonano cztery próby ucieczki prostopadle do ogrodzena przy stałych prędkościach 2, 4, 6 i~8~m/s, każda powtórzona 15 razy. Następnie przeprowadzono krótki ,,wyskok i powrót'' przy 7 m/s na różne odległości poza płot w manewrze trwającym o9~s, czyli krócej niż typowy odstęp próbkowania, powtórzony 30 razy.
+
+\textit{Wynik.} Błąd zgłoszenia (odległość od idealnego punktu przecięcia granicy) rośnie
+w~przybliżeniu proporcjonalnie do prędkości ucieczki (tab.~\ref{tab:scenariusz-b-predkosc}) - to
+fizyczne ograniczenie wynikające z~interwału próbkowania.
+
+\begin{table}[!h]
+    \caption{Błąd zgłoszenia w~funkcji prędkości ucieczki - scenariusz B, część 1}
+    \label{tab:scenariusz-b-predkosc}
+    \centering
+    \begin{tabular}{|r|r|r|}
+        \hline
+        \textbf{Prędkość [m/s]} & \textbf{Błąd średni [m]} & \textbf{Zakres [m]} \\
+        \hline
+        2 & 4,97  & 0,64--8,84 \\
+        4 & 9,92  & 0,21--20,53 \\
+        6 & 16,84 & 0,44--30,03 \\
+        8 & 19,82 & 0,09--39,08 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Krótki wyskok poza granicę bywa natomiast pomijany całkowicie - im płytszy wyskok, tym mniejsza
+szansa, że którakolwiek próbka GPS ,,złapie'' zwierzę poza terenem (tab.~\ref{tab:scenariusz-b-wyskok}). 
+
+\begin{table}[!h]
+    \caption{Wykrywalność krótkiego wyskoku poza granicę (7~m/s) - scenariusz B, część 2}
+    \label{tab:scenariusz-b-wyskok}
+    \centering
+    \begin{tabular}{|r|r|}
+        \hline
+        \textbf{Głębokość wyskoku} & \textbf{Wykrywalność} \\
+        \hline
+        5 m  & 32\% \\
+        10 m & 50\% \\
+        15 m & 85\% \\
+        20 m & 100\% \\
+        30 m & 100\% \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\textit{Wniosek.} Przy dużych prędkościach ucieczki błąd zgłoszenia sięga kilkunastu-kilkudziesięciu
+metrów, a~krótkie wtargnięcia na głębokość do ok.\ 10~m poza granicę są pomijane w~ok.\ połowie
+przypadków. Jest to nieunikniona konsekwencja interwału próbkowania GPS co 5~s, a~nie wada
+algorytmu wykrywania - ewentualne skrócenie interwału próbkowania musi być rozważone w~kontekście
+zużycia baterii (podrozdz.~\ref{sec:testy-funkcjonalne}) i~zasięgu transmisji (podrozdz.~\ref{sec:zasieg-siec}), a także problemu zajętości kanału (podrozdz. ~\ref{sec:modulacja-lora}).
+
+\subsection*{Testy zasięgu i~konfiguracji sprzętowej}
+\label{sec:zasieg-siec}
+
+O ile poprzednie testy koncentrowały się na dokładności detekcji granicy, o~tyle warunkiem
+koniecznym jej działania jest w~ogóle dotarcie pakietu z~pozycją węzła do stacji bazowej (węzła połączonego z telefonem przez Bluetooth). Poniższy test bada, jak wybór sprzętu i liczebność węzłów w sieci wpływa na zasięg sieci mesh oraz czy gorszy zasięg odbija się na dokładności pozycjonowania.
+
+\textit{Metodyka.} W~odróżnieniu od poprzedniego podrozdziału, test przeprowadzono w~terenie, na trzech nakładających się na siebie rzeczywistych trasach biegacza w~lesie. Każdą z nich biegacz pokonanał 3-krotnie zachowując podobne prędkości dla zachowania powtarzalności testów. Na tych samych trasach porównano trzy konfiguracje sprzętowe:
+
+\begin{itemize}
+    \item \textbf{2$\times$ T-1000-E} - zarówno węzeł monitorowany, jak i~stacja bazowa, to modele T-1000-E
+    \item \textbf{T-1000-E + T-Beam} - stacja bazowa zastąpiona modelem T-Beam
+    \item \textbf{3 węzły (2$\times$ T-1000-E + T-Beam)} - jak wyżej, z~dodatkowym węzłem T-1000-E
+          pełniącym rolę przekaźnika, umieszczonym w~realnym punkcie w~połowie trasy (ok.\ 1,5~km
+          od bazy).
+\end{itemize}
+
+\paragraph{Zasięg efektywny i~utrata pakietów.}
+
+Węzeł monitorowany (przemieszczający się z biegaczem) został ustawiony tak, by wysyłał swoją pozycję co 5 sek. Obliczenie efektywnego zasięgu polega na podzieleniu otrzymanej liczby pakietów przez oczekiwaną.
+Jako ,,zasięg efektywny'' przyjęto arbitralnie odległość, przy której utrata pakietów przekracza 90\%. Tabela~\ref{tab:zasieg-efektywny} zestawia wyniki dla wszystkich trzech konfiguracji, wraz z~realnie zaobserwowaną najdalszą odległością, z~której choć jeden pakiet dotarł do sieci.
+
+\begin{table}[!h]
+    \caption{Zasięg efektywny i~utrata pakietów wg konfiguracji sprzętowej}
+    \label{tab:zasieg-efektywny}
+    \centering
+    \small
+    \begin{tabular}{|p{3.6cm}|p{2.6cm}|p{3.4cm}|}
+        \hline
+        \textbf{Konfiguracja} & \textbf{Zasięg efektywny (próg 90\% strat)} & \textbf{Najdalszy pojedynczy odbiór} \\
+        \hline
+        2$\times$ T-1000-E & 889m& 2277 m \\
+        T-1000-E + T-Beam & 2052m& 2990 m \\
+        3 węzły (z~przekaźnikiem) & 2278m& 3114 m \\
+        \hline
+    \end{tabular}
+    \normalsize
+\end{table}
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{WUT-Thesis/img/trasy.png}
+    \caption{Porównanie tras testów}
+    \label{fig:placeholder}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{zasiegKrzyweStrat.png}
+    \caption{Utrata pakietów w~funkcji odległości od stacji bazowej dla trzech konfiguracji}
+    \label{fig:krzywe-strat}
+\end{figure}
+
+Sama zamiana anteny stacji bazowej (z~T-1000-E na T-Beam) ponad dwukrotnie zwiększa zasięg
+efektywny (889~m→2052~m). Dodanie trzeciego węzła jako przekaźnika w~połowie trasy przynosi już
+mniejszy przyrost (2052~m→2278~m) - w~tym konkretnym układzie przekaźnik umieszczono blisko granicy
+zasięgu konfiguracji dwuwęzłowej, więc dodatkowy skok radiowy nie podwaja zasięgu, a~jedynie go
+wydłuża. Warto odnotować, że pojedyncze pakiety docierają znacznie dalej niż wskazuje ,,niezawodny''
+zasięg (nawet do ok.\ 3,1~km dla konfiguracji trójwęzłowej) - nie można jednak na tym polegać, skoro
+ponad 90\% pakietów na tym dystansie i~tak zostaje utraconych.
+
+\subsection*{Podsumowanie i~wnioski}
+\label{sec:podsumowanie-testy}
+
+Testy opisane w~niniejszym rozdziale potwierdzają, że mechanizm geofencingu opisany w~rozdz.~\ref{sec:geofencing}
+działa poprawnie zarówno na rzeczywistych scenariuszach, jak i~w~skrajnych warunkach. Błąd
+zgłoszenia granicy strefy jest w~praktyce zdominowany przez interwał próbkowania GPS (5~s), a~nie
+przez niedoskonałości implementacji ( np.  algorytmu ray casting (podrozdz.~\ref{sec:precyzja-geofencingu}), wynik ten jest spójny niezależnie od konfiguracji sprzętowej sieci mesh (podrozdz.~\ref{sec:zasieg-siec}).
+
+Najważniejszym praktycznym wnioskiem jest kompromis między liczbą fałszywych alarmów
+a~opóźnieniem wykrycia rzeczywistej ucieczki. Scenariusz A pokazał, że zwierzę znajdujące się tuż przy
+granicy, bez żadnej intencji jej opuszczenia, generuje ok.\ 500 potencjalnych powiadomień na godzinę
+- w~praktyce czyniąc system bezużytecznym bez dodatkowego mechanizmu wygładzającego. Wprowadzenie
+bufora rzędu 6-8~m redukuje liczbę takich zdarzeń o~ok.\ 94\%. Ten sam
+bufor ma jednak swoją cenę: scenariusz B pokazał, że przy dużych prędkościach ucieczki (6--8~m/s)
+błąd zgłoszenia i~tak sięga kilkunastu-kilkudziesięciu metrów, a~krótkie, kilkumetrowe wtargnięcia
+poza granicę bywają pomijane niezależnie od bufora. Zwiększanie bufora zmniejsza więc
+liczbę fałszywych alarmów kosztem jeszcze późniejszego wykrycia faktycznej ucieczki. Dobór jego
+wartości powinien uwzględniać typową prędkość poruszania się monitorowanego zwierzęcia oraz
+akceptowalne opóźnienie reakcji.
+
+Testy zasięgu (podrozdz.~\ref{sec:zasieg-siec}) pokazały z~kolei, że wybór konfiguracji sieci ma
+większe znaczenie dla zasięgu efektywnego niż dodanie kolejnego węzła pośredniczącego w~tym
+konkretnym układzie - zamiana T-1000-E na T-Beam po stronie bazy ponad dwukrotnie zwiększyła zasięg
+(889~m→2052~m), podczas gdy dodatkowy przekaźnik wydłużył go jedynie do 2278~m. Niezależnie od
+konfiguracji, dokładność pozycjonowania pozostaje niezmieniona - to ważna informacja przy
+projektowaniu instalacji: rozbudowa sieci o~kolejne węzły poprawia zasięg, nie wpływając negatywnie
+na jakość samej detekcji granicy.
