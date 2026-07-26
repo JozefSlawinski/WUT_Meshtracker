@@ -72,8 +72,8 @@ Zliczana jest liczba przecięć promienia z krawędziami wielokąta:
     \item parzysta liczba przecięć $\Rightarrow$ punkt leży \textbf{na zewnątrz}.
 \end{itemize}
 
-Dla każdej krawędzi łączącej wierzchołki $X_i = (x_i, y_i)$
-i~$Y_j = (x_j, y_j)$ sprawdzany jest warunek przecięcia z promieniem:
+Dla każdej krawędzi łączącej wierzchołki $P_i = (x_i, y_i)$
+i~$P_j = (x_j, y_j)$ sprawdzany jest warunek przecięcia z promieniem:
 krawędź musi mieć jeden wierzchołek ściśle powyżej szerokości geograficznej punktu
 $x_P$, a drugi poniżej lub równo z nią. Jeśli warunek jest spełniony, wyznaczana jest
 długość geograficzna przecięcia:
@@ -226,7 +226,7 @@ i promieniu $r$. Sprawdzenie przynależności sprowadza się wtedy do prostego p
     d(P, C) \leq r \;\Leftrightarrow\; \text{punkt wewnątrz strefy}
 \]
 To rozwiązanie jest szybsze obliczeniowo i prostsze w implementacji, ponieważ nie trzeba
-przechowywać listy wierzchołków. Rozwiązanie to odrzucono, ze względu na elastyczność. 
+przechowywać listy wierzchołków. Rozwiązanie to odrzucono ze względu na brak elastyczności. 
 Zazwyczaj działki mają kształty zbliżone do wydłużonego wielokąta, a nie koła. 
 Okrąg wystarczająco duży, żeby objąć cały teren, wychodziłby daleko poza drogę przy granicy działki, przez co alarm byłby
 spóźniony. Okrąg wystarczająco mały, żeby nie wychodzić za drogę, nie obejmowałby

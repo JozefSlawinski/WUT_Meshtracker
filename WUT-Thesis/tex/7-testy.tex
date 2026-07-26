@@ -46,11 +46,11 @@ tabela~\ref{tab:csv-kolumny}.
         \texttt{\seqsplit{timestamp\_readable}}& j.w., sformatowany & \texttt{yyyy-MM-dd HH:mm:ss} \\
         \texttt{node\_id}           & \texttt{\seqsplit{MeshNodeInfo.getId()}} & np.\ \texttt{!a1b2c3d4} \\
         \texttt{node\_name}         & \texttt{\seqsplit{MeshNodeInfo.getDisplayName()}} & Snapshot z~chwili eksportu \\
-        \texttt{role}               & \texttt{MeshUser.role} & CLIENT, TRACKER, ROUTER itd. \\
+        \texttt{role}               & \texttt{MeshUserInfo.role} & CLIENT, TRACKER, ROUTER itd. \\
         \texttt{lat}, \texttt{lng}  & \texttt{TimedPosition} & 6 miejsc po przecinku \\
         \texttt{altitude\_m}        & \texttt{\seqsplit{TimedPosition.altitude}} &  \\
-        \texttt{snr\_db}            & \texttt{MeshNodeInfo.snr} & Puste jeśli \texttt{Float.MAX\_VALUE} \\
-        \texttt{rssi\_dbm}          & \texttt{MeshNodeInfo.rssi} & Puste jeśli \texttt{Int.MAX\_VALUE} \\
+        \texttt{snr\_db}            & \texttt{TimedPosition.snr} & Puste jeśli \texttt{Float.MAX\_VALUE} \\
+        \texttt{rssi\_dbm}          & \texttt{TimedPosition.rssi} & Puste jeśli \texttt{Int.MAX\_VALUE} \\
         \hline
     \end{tabular}
     \normalsize
@@ -420,7 +420,7 @@ przez niedoskonałości implementacji, np.\ algorytmu ray casting (podrozdz.~\re
 
 Najważniejszym praktycznym wnioskiem jest kompromis między liczbą fałszywych alarmów
 a~opóźnieniem wykrycia rzeczywistej ucieczki. Scenariusz A pokazał, że zwierzę znajdujące się tuż przy
-granicy, bez żadnej intencji jej opuszczenia, generuje ok.\ 500 potencjalnych powiadomień na godzinę
+granicy, bez żadnej intencji jej opuszczenia, generuje ok.\ 580 potencjalnych powiadomień na godzinę
 - w~praktyce czyniąc system bezużytecznym bez dodatkowego mechanizmu wygładzającego. Wprowadzenie
 bufora rzędu 6--8~m redukuje liczbę takich zdarzeń o~ok.\ 99,6\%. Ten sam
 bufor ma jednak swoją cenę: scenariusz B pokazał, że przy dużych prędkościach ucieczki (6--8~m/s)

@@ -9,7 +9,7 @@ warstwie prezentacji i funkcjonalności geofencingu.
 
 \paragraph{Mechanizmy IPC.}
 
-Meshtastic udpostępnia dwa mechanizmy IPC (ang.\ \textit{Inter-Process Communication}):
+Meshtastic udostępnia dwa mechanizmy IPC (ang.\ \textit{Inter-Process Communication}):
 
 \begin{itemize}
     \item \textbf{Interfejs AIDL} (ang.\ \textit{Android Interface Definition Language}) -
@@ -181,7 +181,7 @@ Klasa \texttt{MeshPosition} przechowuje dane lokalizacyjne węzła
 kodowania stosowane przez Meshtastic: współrzędne geograficzne przechowywane są jako liczby
 całkowite (w formacie stopni pomnożonych przez $10^7$) 
 \footnote{\url{https://github.com/meshtastic/Meshtastic-Android/blob/19ea164f93bd48dd556d5232d66869b5cb0b2f40/core/model/src/commonMain/kotlin/org/meshtastic/core/model/Node.kt\#L110}} ,
-co pozwala na precyzję nawet do około 1 metra bez użycia typów zmiennoprzecinkowych. Natomiast kierunek ruchu (\texttt{groundTrack}) wyrażony jest, z podobnej przyczyny, w setnych stopniach (pomnożonych przez $10^5$).
+co pozwala na precyzję nawet do około 1 metra bez użycia typów zmiennoprzecinkowych. Natomiast kierunek ruchu (\texttt{groundTrack}) wyrażony jest, z podobnej przyczyny, w stutysięcznych częściach stopnia (pomnożonych przez $10^5$).
 
 \begin{table}[!h]
     \caption{Pola klasy \texttt{MeshPosition}}
@@ -245,8 +245,8 @@ wskaźnik dla składowej pionowej.}
 
 W konfiguracji przyjętej w projekcie włączone są flagi \texttt{\seqsplit{ALTITUDE}}, \texttt{\seqsplit{SATINVIEW}},
 \texttt{\seqsplit{TIMESTAMP}}, \texttt{\seqsplit{HEADING}} oraz \texttt{\seqsplit{SPEED}}. Flagi są ustawiane per węzeł nadający.
-Precyzja ustalania pozycji ustalana jest na poziomie kanału. Ustawiono  maksymalną możliwą 
-wartość - 32-bity na kanale \texttt{Reja} Jeśli dane pole nie jest aktywowane, w odebranym 
+Precyzja ustalania pozycji ustalana jest na poziomie kanału. Ustawiono maksymalną możliwą
+wartość - 32-bity na kanale \texttt{Reja}. Jeśli dane pole nie jest aktywowane, w odebranym
 pakiecie przyjmuje wartość domyślną (zwykle 0), co MeshTracker traktuje jako brak danych. 
 
 

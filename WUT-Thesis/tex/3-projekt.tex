@@ -61,8 +61,8 @@ W projekcie rozważono możliwość wykorzystania różnych platform sprzętowyc
           czyli płytkę z wbudowanym modułem LoRa i wyświetlaczem OLED. Produkt ten posiada wiele
           cech wypełniających wymagania projektu (wbudowany moduł Bluetooth i LoRa, niskie zużycie
           energii, niski koszt), jednak o odrzuceniu tej platformy zadecydowały pragmatyczne względy: 
-          brak wodoszczelności - ewentualna konieczność druku 3D obudowy, a osiądnięcie IP65 w drukowanej 
-          obudowie wymaga m.in. dedykowanych złączy kablowych, co znacznąco podnosi poziom skomplikowania projektu.
+          brak wodoszczelności - ewentualna konieczność druku 3D obudowy, a osiągnięcie IP65 w drukowanej 
+          obudowie wymaga m.in. dedykowanych złączy kablowych, co znacząco podnosi poziom skomplikowania projektu.
     \item \textbf{Meshtastic na dedykowanym sprzęcie LoRa} - otwartoźródłowa platforma łącząca
           firmware dla modułów radiowych LoRa z ekosystemem aplikacji klienckich. Tworzy
           zdecentralizowaną sieć mesh w paśmie ISM bez infrastruktury zewnętrznej, każdy węzeł
@@ -85,8 +85,8 @@ publiczne API. W ramach platformy wybór padł na:
     \item \textit{T-Beam} - popularna platforma oparta na ESP32 z wbudowanym modułem GPS, anteną
           LoRa oraz akumulatorem. Posiada duży akumulator oraz otwarte piny, które zostawiają
           szerokie pole manewru do rozwoju tego węzła w roli stacji bazowej.
-    \item \textit{T-2000-E} - kompaktowe urządzenie oferujące wodoszczelność (IP65), wbudowany GPS
-          oraz zoptymalizowaną żywotność baterii. Wymiary i kształt są spełniają wymagania projektu, bo
+    \item \textit{T-1000-E} - kompaktowe urządzenie oferujące wodoszczelność (IP65), wbudowany GPS
+          oraz zoptymalizowaną żywotność baterii. Wymiary i kształt spełniają wymagania projektu, bo
           urządzenie ma wymiary dwóch złożonych kart bankowych - 6,5x85x55mm i waży 32 g.
 \end{itemize}
 
@@ -104,7 +104,7 @@ Obie platformy przedstawia rysunek~\ref{fig:platformy}.
     \begin{subfigure}{0.48\linewidth}
         \centering
         \includegraphics[width=\linewidth]{tracker-t1000-e.png}
-        \caption{T1000-E - węzeł obroży}
+        \caption{T-1000-E - węzeł obroży}
         \label{fig:t1000e}
     \end{subfigure}
     \caption{Wybrane platformy sprzętowe Meshtastic}
