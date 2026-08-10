@@ -141,48 +141,35 @@ ${\leq}3$~s (rozdz.~\ref{sec:wymagania}) dałoby się spełnić dosłownie - a~n
 przez dobór bufora (podrozdz.~\ref{sec:precyzja-geofencingu}) - przy innym doborze platformy
 sprzętowej lub firmware'u.
 
-Analiza kodu źródłowego firmware'u Meshtastic, modułów \texttt{PositionModule} oraz
-\texttt{GPSUpdateScheduling}\footnote{Meshtastic Firmware. Repozytorium:
-\url{https://github.com/meshtastic/firmware}.}, a~także oficjalnego opisu API
-modułów\footnote{Module API. Dostępne pod adresem:
-\url{https://meshtastic.org/docs/development/device/module-api/}}, pokazuje, że częstotliwość
-raportowania pozycji sterowana jest przez dwa niezależne parametry konfiguracyjne:
-\texttt{config.position.gps\_update\_interval} (jak często moduł GPS podejmuje próbę uzyskania
-nowego namiaru) oraz \texttt{config.position.position\_broadcast\_secs} (jak często węzeł nadaje
-posiadaną pozycję do sieci). Domyślne wartości dla roli klienta to odpowiednio 2~minuty i~60~minut
-- w~konfiguracji użytej w~niniejszej pracy oba te parametry ustawiono na 5~s, aby uzyskać ciągły
-strumień świeżych pozycji (podrozdz.~\ref{sec:podsumowanie-testy}).
+Z~analizy kodu firmware'u Meshtastic\footnote{Meshtastic Firmware. Repozytorium:
+\url{https://github.com/meshtastic/firmware}.} oraz opisu API modułów\footnote{Module API.
+Dostępne pod adresem: \url{https://meshtastic.org/docs/development/device/module-api/}} wynika,
+że częstotliwością raportowania pozycji sterują dwa oddzielne ustawienia: jak często moduł GPS
+w~ogóle próbuje złapać nowy namiar, oraz jak często węzeł nadaje posiadaną pozycję do sieci.
+Domyślnie są to odpowiednio 2~minuty i~godzina - w~tej pracy oba skrócono do 5~s, żeby uzyskać
+gęstszy strumień pozycji.
 
-Firmware udostępnia dodatkowo domyślnie włączony mechanizm ,,inteligentnego'' raportowania
-(\texttt{position\_broadcast\_smart\_enabled}), który nadaje pozycję natychmiast po przekroczeniu
-progu przemieszczenia (\texttt{broadcast\_smart\_minimum\_distance}, domyślnie 100~m), z
-zastrzeżeniem minimalnego odstępu czasu między kolejnymi nadaniami
-(\texttt{broadcast\_smart\_minimum\_interval\_secs}). Jest to dokładnie mechanizm, którego
-brakowało do pełnej realizacji ,,problemu drugiego'' z rozdz.~\ref{sec:wymagania} - adaptacyjnej
-częstotliwości zależnej od stanu ruchu węzła. Analiza kodu pokazuje jednak, że minimalny odstęp
-czasu jest w~firmwarze twardo ograniczony od dołu do 5~minut, niezależnie od wartości ustawionej
-przez użytkownika (stała \texttt{min\_default\_broadcast\_smart\_minimum\_interval\_secs}, funkcja
-\texttt{Default::getConfiguredOrMinimumValue}). Oznacza to, że wbudowany mechanizm ,,smart
-position'' w~obecnej postaci nie mógłby posłużyć do spełnienia wymagania opóźnienia ${\leq}3$~s -
-byłby wręcz znacznie wolniejszy niż stały interwał 5~s zastosowany w~pracy.
+Firmware ma też wbudowany, domyślnie włączony mechanizm ,,inteligentnego'' raportowania: węzeł
+nadaje pozycję od razu, gdy przesunie się o~więcej niż jakieś 100~metrów, zamiast czekać na koniec
+stałego interwału. To dokładnie ten rodzaj mechanizmu - reagującego na ruch węzła, a~nie na zegar -
+był potrzebny do pełnej realizacji ,,problemu drugiego''. Z~kodu wynika jednak, że odstęp między
+takimi nadaniami i~tak nie może zejść poniżej 5~minut, niezależnie od tego, co ustawi użytkownik -
+to twardy limit wpisany w~firmware. W~praktyce ten wbudowany mechanizm okazuje się więc wolniejszy
+niż zwykły, stały interwał 5-sekundowy zastosowany w~pracy i~sam z~siebie nie rozwiązuje problemu
+opóźnienia poniżej 3~sekund.
 
-Dosłowne spełnienie wymagania wymagałoby więc jednego z~dwóch podejść. Pierwsze, mniej inwazyjne,
-polegałoby na wykorzystaniu istniejącego kanału integracji aplikacji mobilnej z~węzłem
-(rozdz.~\ref{sec:integracja-meshtastic}) do dynamicznej zmiany \texttt{position\_broadcast\_secs}
-i~\texttt{gps\_update\_interval} w~locie: aplikacja, znając geometrię stref
-(rozdz.~\ref{sec:geofencing}) i~bieżącą pozycję węzła, mogłaby skracać interwał raportowania tylko
-wtedy, gdy zwierzę zbliża się do granicy strefy, a~rozluźniać go w~pozostałym czasie dla
-oszczędności baterii. Drugie podejście, głębsze, wymagałoby napisania własnego modułu firmware'u -
-klasy dziedziczącej po \texttt{MeshModule}/\texttt{OSThread} z~implementacją \texttt{runOnce()},
-zgodnie z~API modułów - który przenosiłby geometrię stref na sam węzeł i~wywoływał
-\texttt{service->sendToMesh()} z~częstotliwością zależną od odległości od granicy bezpośrednio na
-urządzeniu, bez pośrednictwa telefonu. Takie podejście zachowałoby działanie systemu również przy
-chwilowej utracie łączności między obrożą a~telefonem, wymagałoby jednak budowania i~utrzymywania
-własnej gałęzi firmware'u dla każdego węzła mobilnego, co znacząco zwiększyłoby złożoność projektu.
+Dosłowne spełnienie tego wymagania wymagałoby więc czegoś więcej niż zmiany ustawień. Jedną
+z~opcji byłoby dynamiczne przeprogramowywanie interwału z~poziomu aplikacji mobilnej - skoro
+aplikacja już zna geometrię stref i~bieżącą pozycję węzła, mogłaby skracać interwał raportowania
+tylko wtedy, gdy zwierzę zbliża się do granicy, a~rozluźniać go w~pozostałym czasie dla
+oszczędności baterii. Głębszym, ale trwalszym rozwiązaniem byłoby napisanie własnego modułu
+firmware'u, który przenosiłby geometrię stref na sam węzeł i~decydował o~częstotliwości nadawania
+lokalnie, bez pośrednictwa telefonu - kosztem konieczności utrzymywania własnej gałęzi firmware'u
+dla każdego węzła.
 
-Nawet przy takiej zmianie wartość ${\leq}3$~s pozostawałaby wynikiem najlepszego przypadku -
-opóźnienie zależy też od czasu propagacji przez sieć mesh (liczby przeskoków) oraz zajętości
-współdzielonego kanału LoRa, a~nie wyłącznie od interwału próbkowania GPS.
+Nawet przy takiej zmianie 3~sekundy pozostałyby wynikiem najlepszego przypadku - opóźnienie zależy
+też od tego, ile przeskoków pakiet musi pokonać w~sieci mesh i~jak bardzo zajęty jest
+współdzielony kanał LoRa, a~nie wyłącznie od częstotliwości próbkowania GPS.
 
 % TODO (do uzupełnienia przez Autora w kolejnych iteracjach):
 %
