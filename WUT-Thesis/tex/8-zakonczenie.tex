@@ -1,0 +1,130 @@
+\newpage
+\section{Zakończenie}
+\label{sec:zakonczenie}
+
+\subsection*{Podsumowanie realizacji celu pracy}
+
+Celem pracy, sformułowanym w~rozdz.~\ref{sec:wstep}, było zaprojektowanie i~implementacja systemu
+monitorowania położenia zwierząt w~czasie rzeczywistym, działającego w~obszarach pozbawionych
+pokrycia sieci komórkowej, wraz z~aplikacją mobilną umożliwiającą wizualizację położenia na mapie,
+definiowanie wirtualnych stref bezpieczeństwa oraz powiadamianie użytkownika o~ich przekroczeniu.
+
+Cel ten został zrealizowany. Rozdz.~\ref{sec:wymagania} przełożył motywację (ucieczki psa myśliwskiego
+poza teren pozbawiony ogrodzenia i~zasięgu sieci komórkowej) na trzy konkretne problemy inżynierskie -
+transmisję danych bez infrastruktury zewnętrznej, optymalizację zajętości pasma oraz integrację
+aplikacji mobilnej z~siecią radiową - a~także na mierzalne wymagania funkcjonalne i~parametryczne.
+Rozdz.~\ref{sec:modulacja-lora} opisuje dobór technologii LoRa/Meshtastic i~konfigurację sprzętu
+radiowego rozwiązujący problem pierwszy, rozdz.~\ref{sec:integracja-meshtastic} - integrację aplikacji
+mobilnej z~siecią radiową (problem trzeci), a~rozdz.~\ref{sec:geofencing} - mechanizm geofencingu
+oparty na algorytmie ray casting wraz z~modelem stref i~zdarzeń. Rozdz.~\ref{sec:podsumowanie-testy}
+potwierdza w~oparciu o~testy terenowe, że zbudowany system poprawnie wykrywa przekroczenie granicy
+strefy zarówno w~typowych, jak i~skrajnych warunkach.
+
+% TODO: jeśli w repo istnieje kod realizujący adaptacyjną częstotliwość wysyłania pozycji
+% (wymaganie z rozdz. 2, pkt "adaptacyjna częstotliwość..."), doprecyzować to zdanie i dodać
+% odwołanie do właściwego podrozdziału. W obecnej treści pracy (rozdz. 1-7) nie znalazłem opisu
+% ani testu tego mechanizmu - jeśli rzeczywiście nie został zrealizowany/zweryfikowany, należy
+% to wprost przyznać tutaj (a nie przemilczeć) i przenieść do "Ograniczeń" albo
+% "Możliwości dalszego rozwoju" poniżej.
+Problem drugi - optymalizacja zajętości pasma poprzez adaptacyjną częstotliwość wysyłania pozycji
+zależną od stanu ruchu węzła - pozostaje częściowo otwarty; w~przeprowadzonych testach system
+korzystał ze stałego interwału próbkowania GPS (5~s) narzuconego przez firmware Meshtastic
+(por.\ rozdz.~\ref{sec:podsumowanie-testy}), a~nie z~mechanizmu adaptacyjnego. Kwestię tę rozwinięto
+w~podrozdziale ,,Możliwości dalszego rozwoju''.
+
+\subsection*{Wnioski z~oceny rozwiązania}
+
+Zestawienie z~komercyjnymi systemami śledzenia psów myśliwskich (tab.~\ref{tab:porownanie}) oraz
+wyniki testów terenowych (rozdz.~\ref{sec:podsumowanie-testy}) pozwalają sformułować następujące
+wnioski.
+
+\textbf{Zalety.} Architektura mesh nie ogranicza zasięgu systemu do pojedynczego łącza
+nadajnik-odbiornik, jak w~rozwiązaniach Dogtra i~Dogtrace, lecz pozwala go rozszerzać przez
+dodawanie kolejnych węzłów pośredniczących - potwierdzają to testy zasięgu
+(tab.~\ref{tab:zasieg-efektywny}), w~których dodanie trzeciego węzła zwiększyło zasięg efektywny
+z~2052~m do 2278~m. System zbudowany jest z~ogólnodostępnych komponentów za ok.\ 400~PLN za węzeł,
+czyli znacząco taniej niż rozwiązania komercyjne (2500~PLN i~2300~PLN), przy jednoczesnym braku
+sztywnego limitu liczby węzłów (21 dla Dogtra, 19 dla Dogtrace). Testy precyzji geofencingu
+(podrozdz.~\ref{sec:precyzja-geofencingu}) wykazały, że wprowadzenie bufora rzędu 6--8~m redukuje
+liczbę fałszywych alarmów o~99,6\%, co czyni system praktycznie użytecznym mimo ograniczeń
+interwału próbkowania GPS.
+
+\textbf{Ograniczenia.} Osiągnięty zasięg efektywny (889--2278~m, zależnie od konfiguracji
+sprzętowej) jest o~rząd wielkości mniejszy niż w~systemach komercyjnych (14--20~km) - należy jednak
+podkreślić, że są to wartości nieporównywalne wprost, ponieważ zasięg systemu mesh rośnie wraz
+z~liczbą węzłów pośredniczących, a~zasięg systemów punkt-punkt jest stały. Co istotne, konfiguracja
+bazowa oparta wyłącznie na węzłach T-1000-E (889~m) \emph{nie spełnia} przyjętego w~rozdz.~\ref{sec:wymagania}
+wymagania minimalnego zasięgu 2~km - wymaganie to jest spełnione dopiero po zastosowaniu węzła
+T-Beam po stronie bazy (2052~m) lub dodaniu przekaźnika (2278~m). Błąd zgłoszenia przekroczenia
+granicy strefy jest w~praktyce zdominowany przez interwał próbkowania GPS (5~s), a~nie przez
+niedoskonałości algorytmu ray casting - jest to ograniczenie sprzętowo-protokołowe (firmware
+Meshtastic), a~nie implementacyjne. Ochrona obudowy węzła mobilnego (IP65) jest niższa niż
+w~rozwiązaniach komercyjnych (IPX9K, IP68).
+
+\subsection*{Zakres zastosowań i~perspektywy wdrożenia}
+
+Choć bezpośrednim punktem wyjścia było śledzenie psa myśliwskiego, opracowane rozwiązanie -
+sieć mesh LoRa z~aplikacją mobilną obsługującą geofencing dowolnych wielokątów - nie jest
+specyficzne dla tego jednego zastosowania. Ten sam mechanizm mógłby posłużyć do monitorowania
+zwierząt gospodarskich na dużych, otwartych pastwiskach pozbawionych zasięgu sieci komórkowej,
+innych zwierząt domowych, a~także - po odpowiednich modyfikacjach interfejsu - do pilnowania mienia
+lub sprzętu pozostawionego w~terenie (analogicznie do funkcji WAYPOINT/FENCE oferowanych przez
+Dogtrace, tab.~\ref{tab:porownanie}).
+
+Przed wdrożeniem produkcyjnym system wymagałby jednak dodatkowej walidacji, wykraczającej poza
+zakres niniejszej pracy:
+\begin{itemize}
+    \item pomiaru rzeczywistego czasu pracy węzła mobilnego na baterii w~warunkach terenowych
+          (aspekt ten nie był przedmiotem testów opisanych w~rozdz.~\ref{sec:podsumowanie-testy}),
+    \item testów z~większą liczbą jednocześnie monitorowanych zwierząt/węzłów niż trzy użyte
+          w~testach zasięgu (podrozdz.~\ref{sec:zasieg-siec}),
+    \item potwierdzenia szczelności obudowy w~warunkach długotrwałej ekspozycji (deszcz, błoto,
+          zanurzenie częściowe) wykraczających poza deklarację IP65,
+    \item oszacowania kosztu produkcji seryjnej (obecna wycena ok.\ 400~PLN/węzeł dotyczy
+          pojedynczych egzemplarzy, por.\ tab.~\ref{tab:porownanie}).
+\end{itemize}
+
+\subsection*{Możliwości dalszego rozwoju}
+
+Na podstawie zidentyfikowanych ograniczeń można wskazać następujące kierunki rozwoju systemu:
+\begin{itemize}
+    \item \textbf{Adaptacyjna częstotliwość wysyłania pozycji} zależna od stanu ruchu węzła
+          (zatrzymanie ruchu / bliskość granicy strefy) - zrealizowanie wymagania sformułowanego
+          w~rozdz.~\ref{sec:wymagania}, które w~obecnej wersji systemu opiera się na stałym
+          interwale próbkowania GPS firmware'u Meshtastic; poza oszczędnością baterii, skrócenie
+          efektywnego interwału w~pobliżu granicy strefy mogłoby bezpośrednio zmniejszyć błąd
+          zgłoszenia opisany w~podrozdz.~\ref{sec:precyzja-geofencingu}.
+    \item \textbf{Testy skalowalności sieci} przy liczbie węzłów większej niż trzy, w~tym analiza
+          zajętości współdzielonego kanału radiowego (sygnalizowana w~tab.~\ref{tab:porownanie},
+          przypis dot.\ nieograniczonej liczby węzłów).
+    \item \textbf{Pomiar i~optymalizacja czasu pracy na baterii} węzła mobilnego, wraz z~doborem
+          trybów oszczędzania energii w~zależności od aktywności zwierzęcia.
+    \item \textbf{Podniesienie klasy szczelności obudowy} węzła mobilnego do poziomu porównywalnego
+          z~rozwiązaniami komercyjnymi (IP68).
+    \item \textbf{Rozszerzenie aplikacji mobilnej} o~analitykę historycznych tras (poza obecnym
+          eksportem CSV opisanym w~podrozdz.~\ref{sec:historia-eksport}) oraz o~wersję na iOS.
+\end{itemize}
+
+\subsection*{Krytyczna refleksja}
+
+% TODO (do wypełnienia przez Autora - to jest fragment wymagający osobistej, uczciwej oceny,
+% a nie gotowego tekstu; poniższe pytania i sugestie to punkt wyjścia, nie gotowa odpowiedź).
+%
+% Pytanie 1: Czym różniłoby się podejście i ew. wyniki, gdyby realizację pracy rozpoczynać dziś?
+%   Możliwy wątek (do potwierdzenia/odrzucenia): wynik testów zasięgu (rozdz. 7) pokazał, że
+%   konfiguracja oparta wyłącznie na T-1000-E (889 m) nie spełnia wymagania z rozdz. 2 (>=2 km),
+%   podczas gdy T-Beam po stronie bazy spełnia je z zapasem. Czy warto było zweryfikować zasięg
+%   sprzętu empirycznie na wczesnym etapie projektu (rozdz. 3), zanim podjęto decyzje projektowe
+%   zakładające dany dobór sprzętu? Czy zmieniłoby to kolejność realizacji zadań?
+%
+% Pytanie 2: Czym różniłoby się podejście i wyniki przy innych wymaganiach/ograniczeniach/założeniach?
+%   Możliwy wątek: wymaganie opóźnienia <=3 s (rozdz. 2) a interwał próbkowania GPS 5 s narzucony
+%   przez firmware Meshtastic (rozdz. 7) - czy przy innym doborze platformy sprzętowej/firmware
+%   dałoby się to wymaganie spełnić dosłownie, a nie tylko pośrednio przez dobór bufora?
+%
+% Przewidywane kierunki zmian w podejściu do problemu (postęp technologii, uwarunkowania rynkowe):
+%   np. rozwój tańszych modułów GPS o krótszym czasie do pierwszego payloadu (TTFF) i wyższej
+%   częstotliwości odświeżania, rozwój Meshtastic (nowe firmware/presety LoRa), zmiany przepisów
+%   dot. dopuszczalnej mocy/zajętości pasma ISM.
+
+\textit{[Ten podrozdział wymaga uzupełnienia przez Autora - patrz komentarz TODO w~źródle pliku.]}
