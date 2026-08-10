@@ -106,24 +106,74 @@ Na podstawie zidentyfikowanych ograniczeń można wskazać następujące kierunk
 
 \subsection*{Krytyczna refleksja}
 
-% TODO (do wypełnienia przez Autora - to jest fragment wymagający osobistej, uczciwej oceny,
-% a nie gotowego tekstu; poniższe pytania i sugestie to punkt wyjścia, nie gotowa odpowiedź).
-%
-% Pytanie 1: Czym różniłoby się podejście i ew. wyniki, gdyby realizację pracy rozpoczynać dziś?
-%   Możliwy wątek (do potwierdzenia/odrzucenia): wynik testów zasięgu (rozdz. 7) pokazał, że
-%   konfiguracja oparta wyłącznie na T-1000-E (889 m) nie spełnia wymagania z rozdz. 2 (>=2 km),
-%   podczas gdy T-Beam po stronie bazy spełnia je z zapasem. Czy warto było zweryfikować zasięg
-%   sprzętu empirycznie na wczesnym etapie projektu (rozdz. 3), zanim podjęto decyzje projektowe
-%   zakładające dany dobór sprzętu? Czy zmieniłoby to kolejność realizacji zadań?
-%
-% Pytanie 2: Czym różniłoby się podejście i wyniki przy innych wymaganiach/ograniczeniach/założeniach?
-%   Możliwy wątek: wymaganie opóźnienia <=3 s (rozdz. 2) a interwał próbkowania GPS 5 s narzucony
-%   przez firmware Meshtastic (rozdz. 7) - czy przy innym doborze platformy sprzętowej/firmware
-%   dałoby się to wymaganie spełnić dosłownie, a nie tylko pośrednio przez dobór bufora?
+Pierwsze z~pytań naprowadzających - czym różniłoby się podejście, gdyby realizację pracy
+rozpoczynać dziś - dotyczy sposobu, w~jaki dobrano i~zweryfikowano zasięg sprzętu radiowego.
+Testy zasięgu przebiegały etapami, w~bardzo różnych warunkach terenowych, zanim ostatecznie
+oceniono system w~scenerii zbliżonej do docelowego zastosowania. Pierwsze pomiary wykonano
+w~zabudowie wielopiętrowej mieszkalnej (widocznej w~tle części zrzutów ekranu w~podrozdz.
+,,Przegląd ekranów aplikacji'', rozdz.~\ref{sec:aplikacja-mobilna}, np.\ rysunek~\ref{fig:map-screen})
+i~wykazały zasięg praktycznie ograniczony do bezpośredniej widoczności między węzłami. Kolejne
+testy, przeprowadzone na płaskim, otwartym terenie polnym, dały wynik rzędu 2~km, a~testy
+w~terenie górskim - rzędu 10~km. Dla porównania, oficjalne testy zasięgu
+Meshtastic\footnote{Meshtastic Range Tests. Dostępne pod adresem:
+\url{https://meshtastic.org/docs/overview/range-tests/}} dokumentują przypadki nawiązania
+łączności na dystansie sięgającym kilkuset kilometrów - trzeba jednak wyraźnie zastrzec, że są to
+warunki skrajnie sprzyjające (bezpośrednia widzialność optyczna, znaczna wysokość umieszczenia
+anten, sprzyjająca propagacja radiowa), zupełnie niereprezentatywne dla docelowego zastosowania
+systemu, czyli obroży psa poruszającego się nisko nad ziemią, w~terenie częściowo zalesionym.
+
+Dopiero testy przeprowadzone w~scenerii najbliższej docelowej - terenie leśno-polno-wiejskim na
+Mazurach (podrozdz.~\ref{sec:zasieg-siec}) - pokazały, że efektywny zasięg gwarantujący
+dostarczenie 90\% pakietów jest znacząco mniejszy niż sugerowałyby wcześniejsze pomiary w~terenie
+otwartym czy górskim (889--2278~m, tab.~\ref{tab:zasieg-efektywny}). Zależność zasięgu systemu od
+typu terenu okazała się na tyle silna, że wynik uzyskany w~jednych warunkach nie przekładał się
+wprost na inne - nie był to wniosek oczywisty na początku realizacji pracy.
+
+Gdybym zaczynał pracę od nowa, zakupiłbym więcej różnych modułów Meshtastic, aby przetestować
+różne kombinacje sprzętu w~roli stacji bazowej jeszcze przed ostatecznym wyborem platformy
+(rozdz.~\ref{sec:modulacja-lora}), zamiast dopiero w~testach końcowych
+(podrozdz.~\ref{sec:zasieg-siec}). Pozwoliłoby to ocenić zależność zasięgu od typu anteny i~mocy
+nadajnika na wczesnym etapie projektu i~ewentualnie skorygować dobór sprzętu, zanim wybór ten
+wpłynął na architekturę całego systemu.
+
+Drugie pytanie naprowadzające dotyczy tego, czy wymaganie opóźnienia dostarczania pakietów
+${\leq}3$~s (rozdz.~\ref{sec:wymagania}) dałoby się spełnić dosłownie - a~nie tylko pośrednio,
+przez dobór bufora (podrozdz.~\ref{sec:precyzja-geofencingu}) - przy innym doborze platformy
+sprzętowej lub firmware'u.
+
+Z~analizy kodu firmware'u Meshtastic\footnote{Meshtastic Firmware. Repozytorium:
+\url{https://github.com/meshtastic/firmware}.} oraz opisu API modułów\footnote{Module API.
+Dostępne pod adresem: \url{https://meshtastic.org/docs/development/device/module-api/}} wynika,
+że częstotliwością raportowania pozycji sterują dwa oddzielne ustawienia: jak często moduł GPS
+w~ogóle próbuje złapać nowy namiar, oraz jak często węzeł nadaje posiadaną pozycję do sieci.
+Domyślnie są to odpowiednio 2~minuty i~godzina - w~tej pracy oba skrócono do 5~s, żeby uzyskać
+gęstszy strumień pozycji.
+
+Firmware ma też wbudowany, domyślnie włączony mechanizm ,,inteligentnego'' raportowania: węzeł
+nadaje pozycję od razu, gdy przesunie się o~więcej niż jakieś 100~metrów, zamiast czekać na koniec
+stałego interwału. To dokładnie ten rodzaj mechanizmu - reagującego na ruch węzła, a~nie na zegar -
+był potrzebny do pełnej realizacji ,,problemu drugiego''. Z~kodu wynika jednak, że odstęp między
+takimi nadaniami i~tak nie może zejść poniżej 5~minut, niezależnie od tego, co ustawi użytkownik -
+to twardy limit wpisany w~firmware. W~praktyce ten wbudowany mechanizm okazuje się więc wolniejszy
+niż zwykły, stały interwał 5-sekundowy zastosowany w~pracy i~sam z~siebie nie rozwiązuje problemu
+opóźnienia poniżej 3~sekund.
+
+Dosłowne spełnienie tego wymagania wymagałoby więc czegoś więcej niż zmiany ustawień. Jedną
+z~opcji byłoby dynamiczne przeprogramowywanie interwału z~poziomu aplikacji mobilnej - skoro
+aplikacja już zna geometrię stref i~bieżącą pozycję węzła, mogłaby skracać interwał raportowania
+tylko wtedy, gdy zwierzę zbliża się do granicy, a~rozluźniać go w~pozostałym czasie dla
+oszczędności baterii. Głębszym, ale trwalszym rozwiązaniem byłoby napisanie własnego modułu
+firmware'u, który przenosiłby geometrię stref na sam węzeł i~decydował o~częstotliwości nadawania
+lokalnie, bez pośrednictwa telefonu - kosztem konieczności utrzymywania własnej gałęzi firmware'u
+dla każdego węzła.
+
+Nawet przy takiej zmianie 3~sekundy pozostałyby wynikiem najlepszego przypadku - opóźnienie zależy
+też od tego, ile przeskoków pakiet musi pokonać w~sieci mesh i~jak bardzo zajęty jest
+współdzielony kanał LoRa, a~nie wyłącznie od częstotliwości próbkowania GPS.
+
+% TODO (do uzupełnienia przez Autora w kolejnych iteracjach):
 %
 % Przewidywane kierunki zmian w podejściu do problemu (postęp technologii, uwarunkowania rynkowe):
 %   np. rozwój tańszych modułów GPS o krótszym czasie do pierwszego payloadu (TTFF) i wyższej
 %   częstotliwości odświeżania, rozwój Meshtastic (nowe firmware/presety LoRa), zmiany przepisów
 %   dot. dopuszczalnej mocy/zajętości pasma ISM.
-
-\textit{[Ten podrozdział wymaga uzupełnienia przez Autora - patrz komentarz TODO w~źródle pliku.]}
