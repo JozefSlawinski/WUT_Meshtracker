@@ -1,11 +1,10 @@
-\newpage
-\section{Integracja z aplikacją Meshtastic}
+\subsection*{Integracja z aplikacją Meshtastic}
 \label{sec:integracja-meshtastic}
 
-Aplikacja MeshTracker nie komunikuje się bezpośrednio z urządzeniami radiowymi - korzysta
+Aplikacja MeshTracker nie komunikuje się bezpośrednio z węzłami sieci, korzysta natomiast
 z aplikacji Meshtastic zainstalowanej na tym samym telefonie, która pełni rolę pośrednika. 
-Wybrano takie podejście, aby nie musieć implementować protokołu Meshtastic i skupić się na 
-warstwie prezentacji i funkcjonalności geofencingu. 
+Wybrano takie podejście, aby skupić się na warstwie prezentacji i funkcjonalności geofencingu, 
+oraz aby nie implementować protokołu komunikacji Meshtastic od nowa.
 
 \paragraph{Mechanizmy IPC.}
 
@@ -34,7 +33,7 @@ podczas startu aplikacji.
 
 Takie podejście do integracji między aplikacjami wprowadza pewną wrażliwość na zmiany API Meshtastic między wersjami.
 W szczególności metoda zwracająca ID węzła lokalnego zmieniała swoją nazwę w kolejnych
-wydaniach, co wymagało zaimplementowania łańcucha kandydatów:
+wydaniach. Wymagało to zaimplementowania "łańcucha kandydatów":
 \texttt{getMyId()} $\to$ \texttt{getMyNodeId()} $\to$ \texttt{myId()} $\to$ \texttt{getOwnerId()}
 $\to$ przez \texttt{\seqsplit{getMyNodeInfo().myNodeNum}}. Wersja Meshtastic na telefonie użytkownika
 jest poza kontrolą dewelopera MeshTrackera, dlatego integracja musi być możliwie elastyczna i odporna na zmiany w API Meshtastic.

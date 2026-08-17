@@ -38,28 +38,29 @@ Zestawienie z~komercyjnymi systemami śledzenia psów myśliwskich (tab.~\ref{ta
 wyniki testów terenowych (rozdz.~\ref{sec:podsumowanie-testy}) pozwalają sformułować następujące
 wnioski.
 
-\textbf{Zalety.} Architektura mesh nie ogranicza zasięgu systemu do pojedynczego łącza
+Architektura mesh nie ogranicza zasięgu systemu do pojedynczego łącza
 nadajnik-odbiornik, jak w~rozwiązaniach Dogtra i~Dogtrace, lecz pozwala go rozszerzać przez
 dodawanie kolejnych węzłów pośredniczących - potwierdzają to testy zasięgu
 (tab.~\ref{tab:zasieg-efektywny}), w~których dodanie trzeciego węzła zwiększyło zasięg efektywny
 z~2052~m do 2278~m. System zbudowany jest z~ogólnodostępnych komponentów za ok.\ 400~PLN za węzeł,
 czyli znacząco taniej niż rozwiązania komercyjne (2500~PLN i~2300~PLN), przy jednoczesnym braku
 sztywnego limitu liczby węzłów (21 dla Dogtra, 19 dla Dogtrace). Testy precyzji geofencingu
-(podrozdz.~\ref{sec:precyzja-geofencingu}) wykazały, że wprowadzenie bufora rzędu 6--8~m redukuje
+(podrozdz.~\ref{sec:precyzja-geofencingu}) wykazały, że wprowadzenie bufora rzędu 6-8~m redukuje
 liczbę fałszywych alarmów o~99,6\%, co czyni system praktycznie użytecznym mimo ograniczeń
 interwału próbkowania GPS.
 
-\textbf{Ograniczenia.} Osiągnięty zasięg efektywny (889--2278~m, zależnie od konfiguracji
-sprzętowej) jest o~rząd wielkości mniejszy niż w~systemach komercyjnych (14--20~km) - należy jednak
+Niestety system ma też swoje ogranicznia. Osiągnięty zasięg efektywny (889-2278~m, zależnie od konfiguracji
+sprzętowej) jest o~rząd wielkości mniejszy niż w~systemach komercyjnych (14-20~km) - należy jednak
 podkreślić, że są to wartości nieporównywalne wprost, ponieważ zasięg systemu mesh rośnie wraz
-z~liczbą węzłów pośredniczących, a~zasięg systemów punkt-punkt jest stały. Co istotne, konfiguracja
+z~liczbą węzłów pośredniczących, a~zasięg systemów punkt-punkt jest stały. Dodatkowo deklarowane przez producentów
+marketingowe metryki często nie w znacznej mierze nie pokrywają się z rzeczywistymi wartościami. Co istotne, konfiguracja
 bazowa oparta wyłącznie na węzłach T-1000-E (889~m) \emph{nie spełnia} przyjętego w~rozdz.~\ref{sec:wymagania}
 wymagania minimalnego zasięgu 2~km - wymaganie to jest spełnione dopiero po zastosowaniu węzła
 T-Beam po stronie bazy (2052~m) lub dodaniu przekaźnika (2278~m). Błąd zgłoszenia przekroczenia
 granicy strefy jest w~praktyce zdominowany przez interwał próbkowania GPS (5~s), a~nie przez
-niedoskonałości algorytmu ray casting - jest to ograniczenie sprzętowo-protokołowe (firmware
-Meshtastic), a~nie implementacyjne. Ochrona obudowy węzła mobilnego (IP65) jest niższa niż
-w~rozwiązaniach komercyjnych (IPX9K, IP68).
+niedoskonałości algorytmu ray casting - jest to ograniczenie po stornie sprzętu i protokołu (firmware
+Meshtastic), a~nie implementacyjne. Jako ostatnie ogranicznie trzeba zwrócić uwagę na to, że ochrona 
+obudowy węzła mobilnego (IP65) jest niższa niż w~rozwiązaniach komercyjnych (IPX9K, IP68).
 
 \subsection*{Zakres zastosowań i~perspektywy wdrożenia}
 
@@ -99,8 +100,6 @@ Na podstawie zidentyfikowanych ograniczeń można wskazać następujące kierunk
           przypis dot.\ nieograniczonej liczby węzłów).
     \item \textbf{Pomiar i~optymalizacja czasu pracy na baterii} węzła mobilnego, wraz z~doborem
           trybów oszczędzania energii w~zależności od aktywności zwierzęcia.
-    \item \textbf{Podniesienie klasy szczelności obudowy} węzła mobilnego do poziomu porównywalnego
-          z~rozwiązaniami komercyjnymi (IP68).
     \item \textbf{Rozszerzenie aplikacji mobilnej} o~analitykę historycznych tras (poza obecnym
           eksportem CSV opisanym w~podrozdz.~\ref{sec:historia-eksport}) oraz o~wersję na iOS.
 \end{itemize}
