@@ -57,7 +57,7 @@ tablice JSON, przykładowo: \texttt{[\{"lat":52.1,"lon":21.0\},\ldots]}.
 \paragraph{Algorytm sprawdzania przynależności do strefy.}
 
 Do wykrywania, czy punkt GPS leży wewnątrz wielokąta strefy, zastosowano algorytm
-\textbf{rzucania promienia} (ang.\ \textit{ray casting}) \footnote{\url{https://www.geeksforgeeks.org/cpp/point-in-polygon-in-cpp/}}.
+\textbf{rzucania promienia} (ang.\ \textit{ray casting})~\cite{geeksforgeeksPip}.
 Jest to jeden z~najszerzej stosowanych algorytmów rozwiązujących problem PIP (ang.\
 \textit{Point-In-Polygon}) ze względu na prostotę implementacji i niską złożoność obliczeniową
 $O(n)$, gdzie $n$ to liczba wierzchołków wielokąta~\cite{shimrat1962}. Uzasadnienie wyboru
@@ -235,7 +235,7 @@ polnej miedzy, albo linii lasu.
 
 \textbf{Google Geofencing API.}
 Wstępnie rozważano skorzystanie z gotowego geofencing API, udostępnianego przez
-Android ~\footnote{\url{https://developer.android.com/develop/sensors-and-location/location/geofencing}} do monitorowania przekroczeń granic geograficznych. Szybko okazało się jednak, że rozwiązanie to monitoruje
+Android~\cite{androidGeofencingApi} do monitorowania przekroczeń granic geograficznych. Szybko okazało się jednak, że rozwiązanie to monitoruje
 wyłącznie pozycję urządzenia, na którym działa aplikacja, a nie pozycję zewnętrznych
 nadajników odbieranych przez sieć Meshtastic,a ponadto obsługuje jedynie strefy
 okrągłe, definiowane przez współrzędne środka i promień.
