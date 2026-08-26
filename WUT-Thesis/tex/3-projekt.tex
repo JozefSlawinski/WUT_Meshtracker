@@ -84,7 +84,7 @@ publiczne API. W ramach platformy wybór padł na:
 \begin{itemize}
     \item \textit{T-Beam} - popularna platforma oparta na ESP32 z wbudowanym modułem GPS, anteną
           LoRa oraz akumulatorem. Posiada duży akumulator oraz otwarte piny, które zostawiają
-          szerokie pole manewru do rozwoju tego węzła w roli stacji bazowej.
+          szerokie pole manewru dla rozwoju węzła w roli stacji bazowej.
     \item \textit{T-1000-E} - kompaktowe urządzenie oferujące wodoszczelność (IP65), wbudowany GPS
           oraz zoptymalizowaną żywotność baterii. Wymiary i kształt spełniają wymagania projektu, bo
           urządzenie ma wymiary dwóch złożonych kart bankowych - 6,5x85x55mm i waży 32 g.
@@ -145,7 +145,7 @@ zawierających współrzędne GPS.
 \subsection*{Konfiguracja sieci Meshtastic}
 
 Sieć Meshtastic skonfigurowano tak, aby wszystkie węzły mogły przesyłać między sobą informacje
-o swoim położeniu GPS. W sieci Meshtastic informacje o pozycji GPS są przesyłane jako część telemetrii węzła. Telemetria
+o swoim położeniu (GPS). W sieci Meshtastic informacje o pozycji GPS są przesyłane jako część telemetrii węzła. Telemetria
 jest automatycznie udostępniana wszystkim węzłom w sieci, które używają tego samego kanału PRIMARY
 (lub kanału wtórnego z włączoną pozycją), mają zgodne ustawienia LoRa (częstotliwość, modem preset)
 oraz są w zasięgu (bezpośrednio lub przez pośrednie węzły). Schemat sieci przedstawia rysunek~\ref{fig:schematSieci}.

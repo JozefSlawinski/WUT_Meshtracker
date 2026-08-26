@@ -20,17 +20,11 @@ oparty na algorytmie ray casting wraz z~modelem stref i~zdarzeń. Rozdz.~\ref{se
 potwierdza w~oparciu o~testy terenowe, że zbudowany system poprawnie wykrywa przekroczenie granicy
 strefy zarówno w~typowych, jak i~skrajnych warunkach.
 
-% TODO: jeśli w repo istnieje kod realizujący adaptacyjną częstotliwość wysyłania pozycji
-% (wymaganie z rozdz. 2, pkt "adaptacyjna częstotliwość..."), doprecyzować to zdanie i dodać
-% odwołanie do właściwego podrozdziału. W obecnej treści pracy (rozdz. 1-7) nie znalazłem opisu
-% ani testu tego mechanizmu - jeśli rzeczywiście nie został zrealizowany/zweryfikowany, należy
-% to wprost przyznać tutaj (a nie przemilczeć) i przenieść do "Ograniczeń" albo
-% "Możliwości dalszego rozwoju" poniżej.
 Problem drugi - optymalizacja zajętości pasma poprzez adaptacyjną częstotliwość wysyłania pozycji
 zależną od stanu ruchu węzła - pozostaje częściowo otwarty; w~przeprowadzonych testach system
 korzystał ze stałego interwału próbkowania GPS (5~s) narzuconego przez firmware Meshtastic
 (por.\ rozdz.~\ref{sec:podsumowanie-testy}), a~nie z~mechanizmu adaptacyjnego. Kwestię tę rozwinięto
-w~podrozdziale ,,Możliwości dalszego rozwoju''.
+w~rozdziale ,,Możliwości dalszego rozwoju''.
 
 \subsection*{Wnioski z~oceny rozwiązania}
 
@@ -45,7 +39,7 @@ dodawanie kolejnych węzłów pośredniczących - potwierdzają to testy zasięg
 z~2052~m do 2278~m. System zbudowany jest z~ogólnodostępnych komponentów za ok.\ 400~PLN za węzeł,
 czyli znacząco taniej niż rozwiązania komercyjne (2500~PLN i~2300~PLN), przy jednoczesnym braku
 sztywnego limitu liczby węzłów (21 dla Dogtra, 19 dla Dogtrace). Testy precyzji geofencingu
-(podrozdz.~\ref{sec:precyzja-geofencingu}) wykazały, że wprowadzenie bufora rzędu 6-8~m redukuje
+(rozdz.~\ref{sec:precyzja-geofencingu}) wykazały, że wprowadzenie bufora rzędu 6-8~m redukuje
 liczbę fałszywych alarmów o~99,6\%, co czyni system praktycznie użytecznym mimo ograniczeń
 interwału próbkowania GPS.
 
@@ -78,52 +72,98 @@ zakres niniejszej pracy:
     \item pomiaru rzeczywistego czasu pracy węzła mobilnego na baterii w~warunkach terenowych
           (aspekt ten nie był przedmiotem testów opisanych w~rozdz.~\ref{sec:podsumowanie-testy}),
     \item testów z~większą liczbą jednocześnie monitorowanych zwierząt/węzłów niż trzy użyte
-          w~testach zasięgu (podrozdz.~\ref{sec:zasieg-siec}),
+          w~testach zasięgu,
     \item potwierdzenia szczelności obudowy w~warunkach długotrwałej ekspozycji (deszcz, błoto,
           zanurzenie częściowe) wykraczających poza deklarację IP65,
     \item oszacowania kosztu produkcji seryjnej (obecna wycena ok.\ 400~PLN/węzeł dotyczy
           pojedynczych egzemplarzy, por.\ tab.~\ref{tab:porownanie}).
 \end{itemize}
 
+\newpage
 \subsection*{Możliwości dalszego rozwoju}
 
-Na podstawie zidentyfikowanych ograniczeń można wskazać następujące kierunki rozwoju systemu:
-\begin{itemize}
-    \item \textbf{Adaptacyjna częstotliwość wysyłania pozycji} zależna od stanu ruchu węzła
-          (zatrzymanie ruchu / bliskość granicy strefy) - zrealizowanie wymagania sformułowanego
-          w~rozdz.~\ref{sec:wymagania}, które w~obecnej wersji systemu opiera się na stałym
-          interwale próbkowania GPS firmware'u Meshtastic; poza oszczędnością baterii, skrócenie
-          efektywnego interwału w~pobliżu granicy strefy mogłoby bezpośrednio zmniejszyć błąd
-          zgłoszenia opisany w~podrozdz.~\ref{sec:precyzja-geofencingu}.
-    \item \textbf{Testy skalowalności sieci} przy liczbie węzłów większej niż trzy, w~tym analiza
-          zajętości współdzielonego kanału radiowego (sygnalizowana w~tab.~\ref{tab:porownanie},
-          przypis dot.\ nieograniczonej liczby węzłów).
-    \item \textbf{Pomiar i~optymalizacja czasu pracy na baterii} węzła mobilnego, wraz z~doborem
-          trybów oszczędzania energii w~zależności od aktywności zwierzęcia.
-    \item \textbf{Rozszerzenie aplikacji mobilnej} o~analitykę historycznych tras (poza obecnym
-          eksportem CSV opisanym w~podrozdz.~\ref{sec:historia-eksport}) oraz o~wersję na iOS.
-\end{itemize}
+Na podstawie zidentyfikowanych ograniczeń można wskazać kilka kierunków dalszego rozwoju systemu.
+Szczególnie istotne wydaje się zrealizowanie adaptacyjnej częstotliwości wysyłania pozycji,
+zależnej od stanu ruchu węzła - a więc rzadszego próbkowania podczas bezruchu i~częstszego
+w~pobliżu granicy strefy - co pozwoliłoby wypełnić wymaganie sformułowane w~rozdz.~\ref{sec:wymagania},
+dotychczas niezrealizowane wobec stałego interwału próbkowania GPS narzuconego przez firmware
+Meshtastic. Poza oczywistą korzyścią w~postaci oszczędności baterii węzła mobilnego, rozwiązanie
+to miałoby również bezpośredni wpływ na jakość działania systemu: skrócenie efektywnego interwału
+próbkowania w~otoczeniu granicy strefy powinno zmniejszyć błąd zgłoszenia przekroczenia opisany
+w~rozdz.~\ref{sec:precyzja-geofencingu}, bez konieczności utrzymywania wysokiej częstotliwości
+próbkowania - a~więc i~zwiększonego zużycia energii oraz pasma - na całym obszarze monitorowanym.
+Kolejnym kierunkiem wartym zbadania jest współpraca z~dronem, wykorzystanym w~niniejszej
+pracy dotychczas jedynie jako narzędzie testowe do odtwarzania powtarzalnej trasy węzła mobilnego.
+Docelowo dron mógłby pełnić funkcję aktywnego elementu systemu - unoszący się nad terenem węzeł, 
+dzięki wyniesieniu ponad przeszkody terenowe, mógłby zwiększać zasięg poszukiwań zagubionego 
+zwierzęcia oraz poprawiać parametry transmisji (mniejsze tłumienie sygnału, większą niezawodność łącza)
+względem konfiguracji opartej wyłącznie na stacjonarnej lub noszonej stacji bazowej.
 
-\subsection*{Krytyczna refleksja}
+Dodatkowych badań wymagałyby również testy skalowalności sieci przy liczbie węzłów większej niż
+trzy, w~tym analiza zajętości współdzielonego kanału radiowego, sygnalizowana już w~tab.~\ref{tab:porownanie}
+(przypis dotyczący nieograniczonej liczby węzłów), a~także pomiar i~optymalizacja czasu pracy na
+baterii węzła mobilnego wraz z~doborem trybów oszczędzania energii w~zależności od aktywności
+zwierzęcia. Możliwe byłoby wreszcie rozszerzenie aplikacji mobilnej o~analitykę historycznych tras,
+wykraczającą poza obecny eksport CSV opisany w~rozdz.~\ref{sec:historia-eksport}, oraz o~wersję
+na system iOS.
 
-% TODO (do wypełnienia przez Autora - to jest fragment wymagający osobistej, uczciwej oceny,
-% a nie gotowego tekstu; poniższe pytania i sugestie to punkt wyjścia, nie gotowa odpowiedź).
-%
-% Pytanie 1: Czym różniłoby się podejście i ew. wyniki, gdyby realizację pracy rozpoczynać dziś?
-%   Możliwy wątek (do potwierdzenia/odrzucenia): wynik testów zasięgu (rozdz. 7) pokazał, że
-%   konfiguracja oparta wyłącznie na T-1000-E (889 m) nie spełnia wymagania z rozdz. 2 (>=2 km),
-%   podczas gdy T-Beam po stronie bazy spełnia je z zapasem. Czy warto było zweryfikować zasięg
-%   sprzętu empirycznie na wczesnym etapie projektu (rozdz. 3), zanim podjęto decyzje projektowe
-%   zakładające dany dobór sprzętu? Czy zmieniłoby to kolejność realizacji zadań?
-%
-% Pytanie 2: Czym różniłoby się podejście i wyniki przy innych wymaganiach/ograniczeniach/założeniach?
-%   Możliwy wątek: wymaganie opóźnienia <=3 s (rozdz. 2) a interwał próbkowania GPS 5 s narzucony
-%   przez firmware Meshtastic (rozdz. 7) - czy przy innym doborze platformy sprzętowej/firmware
-%   dałoby się to wymaganie spełnić dosłownie, a nie tylko pośrednio przez dobór bufora?
-%
-% Przewidywane kierunki zmian w podejściu do problemu (postęp technologii, uwarunkowania rynkowe):
-%   np. rozwój tańszych modułów GPS o krótszym czasie do pierwszego payloadu (TTFF) i wyższej
-%   częstotliwości odświeżania, rozwój Meshtastic (nowe firmware/presety LoRa), zmiany przepisów
-%   dot. dopuszczalnej mocy/zajętości pasma ISM.
+Z powyższych kierunków szerzej przyjrzymy się pierwszemu, ponieważ miałby on realnie największy wpływ na użytkowanie.
+Jak wynika z otwartego kodu firmware'u Meshtastic\footnote{Meshtastic Firmware. Repozytorium:
+\url{https://github.com/meshtastic/firmware}.} oraz opisu API modułów\footnote{Module API.
+Dostępne pod adresem: \url{https://meshtastic.org/docs/development/device/module-api/}},
+częstotliwością raportowania pozycji sterują dwa oddzielne ustawienia. Jedno ustala, jak często moduł GPS
+w~ogóle próbuje złapać nowy namiar, a drugie jak często węzeł nadaje posiadaną pozycję do sieci.
+Domyślnie są to odpowiednio 2~minuty i~godzina - w~tej pracy oba skrócono do 5~s, żeby uzyskać
+,,gęstszy'' strumień pozycji.
 
-\textit{[Ten podrozdział wymaga uzupełnienia przez Autora - patrz komentarz TODO w~źródle pliku.]}
+Firmware ma też wbudowany, domyślnie włączony mechanizm ,,inteligentnego'' raportowania: węzeł
+nadaje pozycję od razu, gdy przesunie się o~więcej niż jakieś 100~metrów, zamiast czekać na koniec
+stałego interwału. To dokładnie ten rodzaj mechanizmu - reagującego na ruch węzła, a~nie na zegar -
+był potrzebny do pełnej realizacji ,,problemu drugiego''. Z~kodu wynika jednak, że odstęp między
+takimi nadaniami i~tak nie może zejść poniżej 5~minut, niezależnie od tego, co ustawi użytkownik -
+to twardy limit wpisany w~firmware. W~praktyce ten wbudowany mechanizm okazuje się więc wolniejszy
+niż zwykły, stały interwał 5-sekundowy zastosowany w~pracy i~sam z~siebie nie rozwiązuje problemu
+opóźnienia poniżej 3~sekund.
+
+Dosłowne spełnienie tego wymagania wymagałoby więc czegoś więcej niż zmiany ustawień. Jedną
+z~opcji byłoby dynamiczne przeprogramowywanie interwału z~poziomu aplikacji mobilnej - skoro
+aplikacja już zna geometrię stref i~bieżącą pozycję węzła, mogłaby skracać interwał raportowania
+tylko wtedy, gdy zwierzę zbliża się do granicy, a~rozluźniać go w~pozostałym czasie dla
+oszczędności baterii. Głębszym, ale trwalszym rozwiązaniem byłoby napisanie własnego modułu 
+firmware'u, który przenosiłby geometrię stref na sam węzeł i~decydował o~częstotliwości nadawania
+lokalnie, bez pośrednictwa telefonu. Odbyłoby się to kosztem konieczności utrzymywania własnego forka firmware'u.
+
+    Testy zasięgu przebiegały etapami, w~bardzo różnych warunkach terenowych, zanim ostatecznie
+oceniono system w~scenerii zbliżonej do docelowego zastosowania. Pierwsze pomiary wykonano
+w~zabudowie wielopiętrowej mieszkalnej (widocznej w~tle części zrzutów ekranu w~rozdz.
+,,Przegląd ekranów aplikacji'', np.\ rysunek~\ref{fig:map-screen})
+i~wykazały zasięg praktycznie ograniczony do bezpośredniej widoczności między węzłami. Kolejne
+testy, przeprowadzone na płaskim, otwartym terenie polnym, dały wynik rzędu 2~km, a~testy
+w~terenie górskim - rzędu 10~km. Dla porównania, oficjalne testy zasięgu Meshtastic~\cite{meshtasticRangeTests} dokumentują przypadki nawiązania
+łączności na dystansie sięgającym kilkuset kilometrów - trzeba jednak wyraźnie zastrzec, że są to
+warunki skrajnie sprzyjające (bezpośrednia widzialność optyczna, znaczna wysokość umieszczenia
+anten, sprzyjająca propagacja radiowa), zupełnie niereprezentatywne dla docelowego zastosowania
+systemu, czyli obroży psa poruszającego się nisko nad ziemią, w~terenie często zalesionym.
+
+Dopiero testy przeprowadzone w~scenerii najbliższej docelowej tnz. terenie o charakterze rolniczo-leśnym na
+Mazurach- pokazały, że efektywny zasięg gwarantujący dostarczenie 90\% pakietów jest znacząco mniejszy niż sugerowałyby wcześniejsze pomiary w~terenie
+otwartym czy górskim (889-2278~m, tab.~\ref{tab:zasieg-efektywny}). Zależność zasięgu systemu od
+typu terenu okazała się na tyle silna, że wynik uzyskany w~jednych warunkach nie przekładał się
+wprost na inne - nie był to wniosek oczywisty na początku realizacji pracy.
+
+Gdybym zaczynał pracę od nowa, zakupiłbym bardziej różnorodny zbiór modułów Meshtastic, o różnych parametrach anten oraz baterii, aby przetestować
+różne kombinacje sprzętu w~roli stacji bazowej jeszcze przed ostatecznym wyborem platformy
+(rozdz.~\ref{sec:modulacja-lora}), zamiast dopiero w~testach końcowych
+(rozdz.~\ref{sec:zasieg-siec}). Pozwoliłoby to ocenić zależność zasięgu od typu anteny i~mocy
+nadajnika na wczesnym etapie projektu i~ewentualnie skorygować dobór sprzętu, zanim wybór ten
+wpłynął na architekturę całego systemu. 
+\newpage
+Na zakończenie pracy przedstawiam, często wspominanego w tej pracy, psa rasy Mały Gończy Gaskoński, który był inspiracją dla stworzenia niniejszej pracy oraz
+służył do testów w terenie. 
+
+\begin{figure}[!t]
+  \centering
+    \includegraphics[width=0.8\linewidth]{WUT-Thesis/img/reja_meshtracker.jpg}
+    \caption{Mały gończy Gaskoński}
+    \label{fig:piesDoTestow}
+\end{figure}
