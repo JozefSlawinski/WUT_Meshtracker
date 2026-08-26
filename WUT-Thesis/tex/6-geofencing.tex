@@ -234,10 +234,11 @@ części terenu. Wielokąt pozwala narysować granicę dokładnie wzdłuż ogrod
 polnej miedzy, albo linii lasu.
 
 \textbf{Google Geofencing API.}
-Wstępnie rozważano skorzystanie z gotowego
-geofencing API, które Android udostępnia właśnie do monitorowania przekroczeń granic
-geograficznych. Szybko okazało się jednak, że to API monitoruje wyłącznie pozycję GPS
-\emph{samego telefonu} i obsługuje tylko strefy okrągłe.
+Wstępnie rozważano skorzystanie z gotowego geofencing API, udostępnianego przez
+Android ~\footnote{\url{https://developer.android.com/develop/sensors-and-location/location/geofencing}} do monitorowania przekroczeń granic geograficznych. Szybko okazało się jednak, że rozwiązanie to monitoruje
+wyłącznie pozycję urządzenia, na którym działa aplikacja, a nie pozycję zewnętrznych
+nadajników odbieranych przez sieć Meshtastic,a ponadto obsługuje jedynie strefy
+okrągłe, definiowane przez współrzędne środka i promień.
 
 
 \textbf{Algorytm liczby owiniętej (ang.\ \textit{winding number}).}

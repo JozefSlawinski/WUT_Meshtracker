@@ -27,7 +27,7 @@ Meshtastic udostępnia dwa mechanizmy IPC (ang.\ \textit{Inter-Process Communica
 \end{itemize}
 
 MeshTracker korzysta z obu mechanizmów jednocześnie: AIDL do inicjalizacji stanu i cyklicznego
-odświeżania, broadcasty do aktualizacji w czasie rzeczywistym. Gwarantuje to
+odświeżania oraz rozsyłu komunikatów (broadcastów) w celu aktualizacji w czasie rzeczywistym. Gwarantuje to
 spójność danych niezależnie od tego, czy zdarzenie nastąpi między cyklami odświeżania, czy
 podczas startu aplikacji.
 
@@ -90,7 +90,7 @@ Niezależnie od automatycznych prób, użytkownik może w dowolnej chwili nacisn
 które anuluje bieżące zadania, resetuje binding i inicjuje nowe połączenie z serwisem
 od zera. Jest to przydatne np. gdy użytkownik ręcznie uruchomił aplikację Meshtastic i chce wywołać
 natychmiastową próbę połączenia bez czekania na automatyczne odświeżenie.
-
+\newpage
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
