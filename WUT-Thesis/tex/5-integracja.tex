@@ -18,12 +18,12 @@ Meshtastic udostępnia dwa mechanizmy IPC (ang.\ \textit{Inter-Process Communica
           nie może normalnie uzyskać dostępu do pamięci innego procesu. Aby się komunikować, muszą 
           rozkładać obiekty na elementy, które system operacyjny może zrozumieć, i przekazywać je 
           przez tę granicę. Kod potrzebny do tego przekształcania jest trudny do napisania, dlatego 
-          Android wykonuje to za Ciebie za pomocą AIDL.[\url{https://developer.android.com/develop/background-work/services/aidl?hl=pl}]}
+          Android wykonuje to za Ciebie za pomocą AIDL~\cite{androidAidlDocs}.}
 
     \item \textbf{Broadcasty Androida} - Meshtastic rozsyła komunikaty do wszystkich
           zainteresowanych aplikacji przy każdej zmianie stanu sieci. Pozwala to na reaktywne
           powiadamianie o nowych danych bez aktywnego odpytywania serwisu.  
-        \footnote{Aplikacje Androida mogą wysyłać i odbierać komunikaty systemowe oraz pochodzące z innych aplikacji, zgodnie ze wzorem projektowym \textit{publish-subscribe}. \url{https://developer.android.com/guide/components/broadcasts?hl=pl}}
+        \footnote{Aplikacje Androida mogą wysyłać i odbierać komunikaty systemowe oraz pochodzące z innych aplikacji, zgodnie ze wzorem projektowym \textit{publish-subscribe}~\cite{androidBroadcastsDocs}.}
 \end{itemize}
 
 MeshTracker korzysta z obu mechanizmów jednocześnie: AIDL do inicjalizacji stanu i cyklicznego
@@ -67,7 +67,7 @@ pasek stanu aplikacji (\texttt{\seqsplit{ConnectionStatusBar}}) odpowiednim komu
 
 \paragraph{Automatyczna próba ponownego połączenia.}
 
-Odebranie broadcastu \texttt{\seqsplit{ACTION\_MESH\_DISCONNECTED}} \footnote{Broadcasty nie są dostępne w dokumentacji API, jednak można je znaleźć dobrze udokumentowane w repozytorium \url{https://github.com/meshtastic/Meshtastic-Android/blob/main/core/api/src/main/kotlin/org/meshtastic/core/api/MeshtasticIntent.kt}} przy wciąż aktywnym bindingu
+Odebranie broadcastu \texttt{\seqsplit{ACTION\_MESH\_DISCONNECTED}} \footnote{Broadcasty nie są dostępne w dokumentacji API, jednak można je znaleźć dobrze udokumentowane w repozytorium~\cite{meshtasticAndroidIntentSource}.} przy wciąż aktywnym bindingu
 z serwisem (tj.\ gdy \texttt{isBound~=~true}) uruchamia w \texttt{\seqsplit{MapViewModel}} procedurę
 automatycznego wznawiania połączenia z węzłem lokalnym (\texttt{startReconnecting()}). Działa ona
 w pętli, która wykonywana jest aż do skutku lub utraty samego bindingu.
@@ -178,8 +178,7 @@ właściciela (tabela~\ref{tab:meshuserinfo}).
 Klasa \texttt{MeshPosition} przechowuje dane lokalizacyjne węzła
 (tabela~\ref{tab:meshposition}). Warto zwrócić uwagę na dwie nieoczywiste konwencje
 kodowania stosowane przez Meshtastic: współrzędne geograficzne przechowywane są jako liczby
-całkowite (w formacie stopni pomnożonych przez $10^7$) 
-\footnote{\url{https://github.com/meshtastic/Meshtastic-Android/blob/19ea164f93bd48dd556d5232d66869b5cb0b2f40/core/model/src/commonMain/kotlin/org/meshtastic/core/model/Node.kt\#L110}} ,
+całkowite (w formacie stopni pomnożonych przez $10^7$)~\cite{meshtasticAndroidNodeSource},
 co pozwala na precyzję nawet do około 1 metra bez użycia typów zmiennoprzecinkowych. Natomiast kierunek ruchu (\texttt{groundTrack}) wyrażony jest, z podobnej przyczyny, w stutysięcznych częściach stopnia (pomnożonych przez $10^5$).
 
 \begin{table}[!h]
@@ -204,7 +203,7 @@ co pozwala na precyzję nawet do około 1 metra bez użycia typów zmiennoprzeci
 
 Dostępność poszczególnych pól pozycji zależy od konfiguracji węzła nadającego, a konkretnie
 od wartości \textit{Position Flags}, czyli bitowego pola opcji włączanych w ustawieniach
-radia Meshtastic.\footnote{\url{https://meshtastic.org/docs/configuration/radio/position/\#position-config-values}}
+radia Meshtastic~\cite{meshtasticPositionConfigDocs}.
 Tabela~\ref{tab:position-flags} zestawia dostępne flagi.
 
 \begin{table}[!h]

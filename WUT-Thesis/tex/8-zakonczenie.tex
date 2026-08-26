@@ -108,10 +108,8 @@ wykraczającą poza obecny eksport CSV opisany w~rozdz.~\ref{sec:historia-ekspor
 na system iOS.
 
 Z powyższych kierunków szerzej przyjrzymy się pierwszemu, ponieważ miałby on realnie największy wpływ na użytkowanie.
-Jak wynika z otwartego kodu firmware'u Meshtastic\footnote{Meshtastic Firmware. Repozytorium:
-\url{https://github.com/meshtastic/firmware}.} oraz opisu API modułów\footnote{Module API.
-Dostępne pod adresem: \url{https://meshtastic.org/docs/development/device/module-api/}},
-częstotliwością raportowania pozycji sterują dwa oddzielne ustawienia. Jedno ustala, jak często moduł GPS
+Jak wynika z otwartego kodu firmware'u Meshtastic~\cite{meshtasticFirmwareRepo} oraz opisu API
+modułów~\cite{meshtasticModuleApiDocs}, częstotliwością raportowania pozycji sterują dwa oddzielne ustawienia. Jedno ustala, jak często moduł GPS
 w~ogóle próbuje złapać nowy namiar, a drugie jak często węzeł nadaje posiadaną pozycję do sieci.
 Domyślnie są to odpowiednio 2~minuty i~godzina - w~tej pracy oba skrócono do 5~s, żeby uzyskać
 ,,gęstszy'' strumień pozycji.

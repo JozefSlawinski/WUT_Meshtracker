@@ -14,7 +14,7 @@ LoRa. Poniżej przedstawiono krótki opis teoretyczny oraz uzasadnienie wyboru.
 \label{sec:modulacja-lora}
 LoRa (ang.\ \textit{Long Range}) to technika modulacji radiowej, która pozwala na przesyłanie
 niewielkich pakietów danych na bardzo duże odległości - nawet kilkanaście kilometrów - przy
-minimalnym zużyciu energii.\footnote{\url{https://www.gov.pl/web/instytut-lacznosci/lora-pod-lupa}}
+minimalnym zużyciu energii~\cite{govPlLora}.
 Jej zamysł opiera się na technice modulacji CSS (ang.\ \textit{Chirp Spread Spectrum}) lub FSCM
 (ang.\ \textit{Frequency Shift Chirp Modulation})~\cite{vangelista2017lora}. Polega ona na
 kodowaniu sygnału przez cykliczne przesunięcie punktu startowego chirpa. Wspomniany chirp to
@@ -36,7 +36,7 @@ Modulację LoRa opisują trzy główne parametry:
           kodu korekcji błędów. Wyższy CR zwiększa odporność na błędy transmisji kosztem wydajności.
 \end{itemize}
 
-Przepustowość bitową modulacji LoRa wyraża wzór:\footnote{\url{https://josefmtd.com/2018/08/14/spreading-factor-bandwidth-coding-rate-and-bit-rate-in-lora-english/}}
+Przepustowość bitową modulacji LoRa wyraża wzór~\cite{josefmtdLoraBitrate}:
 
 \begin{equation}
     R_b = SF \cdot \frac{BW}{2^{SF}} \cdot \frac{CR}{4+CR}
@@ -68,9 +68,7 @@ W projekcie rozważono możliwość wykorzystania różnych platform sprzętowyc
           zdecentralizowaną sieć mesh w paśmie ISM bez infrastruktury zewnętrznej, każdy węzeł
           automatycznie retransmituje pakiety pozostałych, rozszerzając zasięg sieci wraz
           z liczbą urządzeń. Platforma udostępnia publiczne API w postaci aplikacji Android
-          \texttt{com.geeksville.mesh}\footnote{Repozytorium aplikacji Meshtastic na Android:
-          \url{https://github.com/meshtastic/Meshtastic-Android}. Dokumentacja API:
-          \url{https://meshtastic.org/docs/development/firmware/build/}.} oraz eksportuje 
+          \texttt{com.geeksville.mesh}~\cite{meshtasticAndroidRepo,meshtasticFirmwareBuildDocs} oraz eksportuje
           interfejs AIDL\footnote{AIDL (ang.\ \textit{Android Interface Definition Language}) to mechanizm
           systemu Android umożliwiający komunikację między procesami.} umożliwiający aplikacjom
           trzecim odczyt danych telemetrycznych - w tym pozycji GPS węzłów.
@@ -114,7 +112,7 @@ Obie platformy przedstawia rysunek~\ref{fig:platformy}.
 Otwartoźródłowy charakter projektu stwarza możliwość implementacji rozszerzeń dla węzłów sieci
 w postaci modułów. Dzięki temu wybór Meshtastic jako platformy sprzętowej nie ograniczy projektu
 do domyślnie dostępnych funkcji. Spośród dostępnych konfiguracji radiowych można wybrać parametry
-dla modulacji LoRa. Zostały one zestawione w tabeli~\ref{tab:lora-presets}.\footnote{\url{https://meshtastic.org/docs/software/site-planner/}}
+dla modulacji LoRa. Zostały one zestawione w tabeli~\ref{tab:lora-presets}~\cite{meshtasticSitePlanner}.
 
 \begin{table}[!h]
     \caption{Predefiniowane ustawienia kanałów LoRa w Meshtastic}
