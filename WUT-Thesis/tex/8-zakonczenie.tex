@@ -38,10 +38,9 @@ dodawanie kolejnych węzłów pośredniczących - potwierdzają to testy zasięg
 (tab.~\ref{tab:zasieg-efektywny}), w~których dodanie trzeciego węzła zwiększyło zasięg efektywny
 z~2052~m do 2278~m. System zbudowany jest z~ogólnodostępnych komponentów za ok.\ 400~PLN za węzeł,
 czyli znacząco taniej niż rozwiązania komercyjne (2500~PLN i~2300~PLN), przy jednoczesnym braku
-sztywnego limitu liczby węzłów (21 dla Dogtra, 19 dla Dogtrace). Testy precyzji geofencingu
-(rozdz.~\ref{sec:precyzja-geofencingu}) wykazały, że wprowadzenie bufora rzędu 6-8~m redukuje
-liczbę fałszywych alarmów o~99,6\%, co czyni system praktycznie użytecznym mimo ograniczeń
-interwału próbkowania GPS.
+sztywnego limitu liczby węzłów (21 dla Dogtra, 19 dla Dogtrace). Testy precyzji geofencingu wykazały, 
+że wprowadzenie bufora rzędu 6-8~m redukuje liczbę fałszywych alarmów o~99,6\%, co czyni system 
+praktycznie użytecznym mimo ograniczeń interwału próbkowania GPS.
 
 Niestety system ma też swoje ogranicznia. Osiągnięty zasięg efektywny (889-2278~m, zależnie od konfiguracji
 sprzętowej) jest o~rząd wielkości mniejszy niż w~systemach komercyjnych (14-20~km) - należy jednak
@@ -149,19 +148,21 @@ otwartym czy górskim (889-2278~m, tab.~\ref{tab:zasieg-efektywny}). Zależnoś�
 typu terenu okazała się na tyle silna, że wynik uzyskany w~jednych warunkach nie przekładał się
 wprost na inne - nie był to wniosek oczywisty na początku realizacji pracy.
 
-Gdybym zaczynał pracę od nowa, zakupiłbym bardziej różnorodny zbiór modułów Meshtastic, o różnych parametrach anten oraz baterii, aby przetestować
-różne kombinacje sprzętu w~roli stacji bazowej jeszcze przed ostatecznym wyborem platformy
-(rozdz.~\ref{sec:modulacja-lora}), zamiast dopiero w~testach końcowych
-(rozdz.~\ref{sec:zasieg-siec}). Pozwoliłoby to ocenić zależność zasięgu od typu anteny i~mocy
-nadajnika na wczesnym etapie projektu i~ewentualnie skorygować dobór sprzętu, zanim wybór ten
-wpłynął na architekturę całego systemu. 
+Gdyby prace nad projektem rozpoczynano od nowa, zasadne byłoby zakupienie różnorodnego zbioru modułów Meshtastic, 
+różniących się parametrami anten oraz baterii, aby przetestować różne konfiguracje sprzętowe w roli stacji bazowej 
+jeszcze przed ostatecznym wyborem platformy (rozdz.~\ref{sec:modulacja-lora}). Pozwoliłoby to na ocenę zależności zasięgu od typu anteny 
+i mocy nadajnika na wcześniejszym etapie projektu oraz, w razie potrzeby, na skorygowanie doboru sprzętu, zanim 
+wpłynąłby on na architekturę całego systemu.
+
+
 \newpage
-Na zakończenie pracy przedstawiam, często wspominanego w tej pracy, psa rasy Mały Gończy Gaskoński, który był inspiracją dla stworzenia niniejszej pracy oraz
-służył do testów w terenie. 
+Na zakończenie pracy przedstawiono często wspominanego w jej treści psa rasy Mały Gończy Gaskoński, 
+który stanowił inspirację do powstania niniejszej pracy oraz uczestniczył w testach terenowych.
+
 
 \begin{figure}[!t]
   \centering
-    \includegraphics[width=0.8\linewidth]{WUT-Thesis/img/reja_meshtracker.jpg}
+    \includegraphics[width=0.8\linewidth]{reja_meshtracker.jpg}
     \caption{Mały gończy Gaskoński}
     \label{fig:piesDoTestow}
 \end{figure}
