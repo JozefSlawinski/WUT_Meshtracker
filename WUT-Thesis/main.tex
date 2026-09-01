@@ -66,7 +66,7 @@
 \EngineerThesis
 \instytut{Telekomunikacji i Cyberbezpieczeństwa}
 \kierunek{Telekomiunikacja}
-\specjalnosc{}
+\specjalnosc{Techniki Teleinformatyczne}
 \title{
 Monitorowanie położenia zwierząt z geofencingiem w sieci mesh LoRa}
 \engtitle{
@@ -84,7 +84,17 @@ Monitorowanie położenia zwierząt z geofencingiem w sieci mesh LoRa}
 %--------------------------------------
 \cleardoublepage % Zaczynamy od nieparzystej strony
 \streszczenie
-% TODO: uzupełnić streszczenie po polsku
+Praca dotyczy projektu i implementacji systemu MeshTracker, służącego do śledzenia położenia zwierząt na obszarach 
+pozbawionych zasięgu sieci komórkowej. W systemie wykorzystano techonologię LoRa oraz sieć Meshtastic opartą na otwartym oprogramowaniu. 
+Nadajnik umieszczany na obroży zwierzęcia okresowo wyznacza pozycję z odbiornika GPS i rozgłasza ją do węzłów pośredniczących, a~węzeł
+końcowy przekazuje dane przez Bluetooth do aplikacji Meshtastic na smartfonie z systemen Android. Zaimlementowana aplikacja MeshTracker 
+odpowiada za przechwytywanie i dekodowanie pakietów protokołu Meshtastic oraz trwałe przechowywanie śladów w lokalnej bazie danych, 
+prezentację trasy na mapie oraz eksport danych do plików CSV. Zaimplementowano również mechanizm stref (geofencing) generujący 
+zdarzenia wejścia i wyjścia wraz z powiadomieniami. Poprawność rozwiązania zweryfikowano w testach terenowych, w których zarejestrowano 
+ślad o długości ok. 4,6 km, oceniając ciągłość transmisji, jakość odbieranego sygnału (RSSI, SNR) oraz wiarygodność detekcji stref. 
+Wyniki potwierdzają przydatność sieci LoRa jako taniej, niezależnej od infrastruktury operatorskiej warstwy transportowej dla 
+lokalizacji zwierząt, przy jednoczesnym wskazaniu ograniczeń wynikających z niskiej przepustowości łącza i zużycia energii.
+ 
 \slowakluczowe LoRa, Meshtastic, geofencing, aplikacja mobilna, Android, sieć mesh
 
 %--------------------------------------
@@ -92,7 +102,19 @@ Monitorowanie położenia zwierząt z geofencingiem w sieci mesh LoRa}
 %--------------------------------------
 \newpage
 \abstract
-% TODO: uzupełnić streszczenie po angielsku
+This thesis concerns the design and implementation of the MeshTracker system, intended for tracking the
+location of animals in areas without cellular network coverage. The system employs LoRa technology and an
+open-source Meshtastic network. A transmitter mounted on the animal's collar periodically
+determines its position from a GPS receiver and broadcasts it to relaying nodes, while the end node forwards
+the data over Bluetooth to the Meshtastic application on an Android smartphone. The implemented MeshTracker
+application is responsible for intercepting and decoding Meshtastic protocol packets, for persistently storing
+tracks in a local database, for presenting the route on a map and for exporting the data to CSV files. A zone
+mechanism (geofencing) was also implemented, generating entry and exit events together with notifications.
+The correctness of the solution was verified in field tests, in which a track of approximately 4.6~km was
+recorded, assessing transmission continuity, the quality of the received signal (RSSI, SNR) and the reliability
+of zone detection. The results confirm the usefulness of a LoRa network as an inexpensive transport layer for
+animal localisation that is independent of operator infrastructure, while also indicating limitations arising
+from the low throughput of the link and from energy consumption.
 \keywords LoRa, Meshtastic, geofencing, mobile application, Android, mesh network
 
 %--------------------------------------
